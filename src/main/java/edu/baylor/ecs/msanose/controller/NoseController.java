@@ -54,60 +54,60 @@ public class NoseController {
         long now = System.currentTimeMillis();
         times.put("Bytecode Analysis", now - curr);   //processing time
 
-//        curr = System.currentTimeMillis();
-//        context.setUnversionedAPIContext(getApis(request));
-//        now = System.currentTimeMillis();
-//        times.put("Unversioned API", now - curr);
-//
-//        curr = System.currentTimeMillis();
-//        context.setSharedLibraryContext(getSharedLibraries(request));
-//        now = System.currentTimeMillis();
-//        times.put("Shared Library", now - curr);
-//
-//        curr = System.currentTimeMillis();
-//        context.setWrongCutsContext(getWrongCuts(request));
-//        now = System.currentTimeMillis();
-//        times.put("Wrong Cuts", now - curr);
+        curr = System.currentTimeMillis();
+        context.setUnversionedAPIContext(getApis(request));
+        now = System.currentTimeMillis();
+        times.put("Unversioned API", now - curr);
+
+        curr = System.currentTimeMillis();
+        context.setSharedLibraryContext(getSharedLibraries(request));
+        now = System.currentTimeMillis();
+        times.put("Shared Library", now - curr);
+
+        curr = System.currentTimeMillis();
+        context.setWrongCutsContext(getWrongCuts(request));
+        now = System.currentTimeMillis();
+        times.put("Wrong Cuts", now - curr);
 
         curr = System.currentTimeMillis();
         context.setHardCodedEndpointsContext(getHardcodedEndpoints(request));
         now = System.currentTimeMillis();
         times.put("Hardcoded Enpoints", now - curr);
 
-//        curr = System.currentTimeMillis();
-//        context.setCyclicDependency(getCyclicDependency(request));
-//        now = System.currentTimeMillis();
-//        times.put("Cyclic Dependency", now - curr);
-//
-//        curr = System.currentTimeMillis();
-//        context.setSharedPersistencyContext(getSharedPersistency(request));
-//        now = System.currentTimeMillis();
-//        times.put("Shared Persistency", now - curr);
-//
-//        curr = System.currentTimeMillis();
-//        context.setEsbContext(getESBUsage(request));
-//        now = System.currentTimeMillis();
-//        times.put("ESB", now - curr);
+        curr = System.currentTimeMillis();
+        context.setCyclicDependency(getCyclicDependency(request));
+        now = System.currentTimeMillis();
+        times.put("Cyclic Dependency", now - curr);
 
-//        curr = System.currentTimeMillis();
-//        context.setAPIGateway(getNoAPIGateway(request));
-//        now = System.currentTimeMillis();
-//        times.put("API Gateway", now - curr);
-//
-//        curr = System.currentTimeMillis();
-//        context.setInappropriateServiceIntimacyContext(getInappropriateServiceIntimacy(request));
-//        now = System.currentTimeMillis();
-//        times.put("ISI", now - curr);
-//
-//        curr = System.currentTimeMillis();
-//        context.setTooManyStandardsContext(getTooManyStandards(request));
-//        now = System.currentTimeMillis();
-//        times.put("Too Many Standards", now - curr);
-//
-//        curr = System.currentTimeMillis();
-//        context.setMicroservicesGreedyContext(getMicroservicesGreedy(request));
-//        now = System.currentTimeMillis();
-//        times.put("Microservice Greedy", now - curr);
+        curr = System.currentTimeMillis();
+        context.setSharedPersistencyContext(getSharedPersistency(request));
+        now = System.currentTimeMillis();
+        times.put("Shared Persistency", now - curr);
+
+        curr = System.currentTimeMillis();
+        context.setEsbContext(getESBUsage(request));
+        now = System.currentTimeMillis();
+        times.put("ESB", now - curr);
+
+        curr = System.currentTimeMillis();
+        context.setAPIGateway(getNoAPIGateway(request));
+        now = System.currentTimeMillis();
+        times.put("API Gateway", now - curr);
+
+        curr = System.currentTimeMillis();
+        context.setInappropriateServiceIntimacyContext(getInappropriateServiceIntimacy(request));
+        now = System.currentTimeMillis();
+        times.put("ISI", now - curr);
+
+        curr = System.currentTimeMillis();
+        context.setTooManyStandardsContext(getTooManyStandards(request));
+        now = System.currentTimeMillis();
+        times.put("Too Many Standards", now - curr);
+
+        curr = System.currentTimeMillis();
+        context.setMicroservicesGreedyContext(getMicroservicesGreedy(request));
+        now = System.currentTimeMillis();
+        times.put("Microservice Greedy", now - curr);
 
         context.setTimes(times);
 
@@ -118,6 +118,7 @@ public class NoseController {
     @CrossOrigin(origins = "*")
     @RequestMapping(path = "/apis", method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
     public UnversionedAPIContext getApis(@RequestBody RequestContext request){
+        List<APIContext> apis = apiService.getAPIs(request.getPathToCompiledMicroservices());
         return new UnversionedAPIContext(apiService.getAPIs(request.getPathToCompiledMicroservices()).stream()
                 .map(APIContext::getPath)
                 .filter(api -> !apiService.isVersioned(api))   //filter เอาเฉพาะ  uri ที่ไม่ตรง regex: /มี0-1ตัวก่อน api/v ตามด้วยตัวเลขอย่างน้อย 1 ตัว
