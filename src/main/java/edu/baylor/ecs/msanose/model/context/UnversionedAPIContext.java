@@ -12,10 +12,12 @@ import java.util.Set;
 @Data public class UnversionedAPIContext {
     Set<String> unversionedAPIs;
     int count;
+    double ratioOfNonVersionedAPIs;
 
     public UnversionedAPIContext(){
         this.unversionedAPIs = new HashSet<>();
         this.count = 0;
+        this.ratioOfNonVersionedAPIs = 0.0;
     }
 
     public UnversionedAPIContext(Set<String> unversionedAPIs){

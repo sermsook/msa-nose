@@ -12,6 +12,7 @@ import edu.baylor.ecs.rad.context.RestFlowContext;
 import edu.baylor.ecs.rad.model.RestEntity;
 import edu.baylor.ecs.rad.model.RestFlow;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.jni.Time;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1")
 @AllArgsConstructor
@@ -119,10 +121,16 @@ public class NoseController {
     @RequestMapping(path = "/apis", method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
     public UnversionedAPIContext getApis(@RequestBody RequestContext request){
         List<APIContext> apis = apiService.getAPIs(request.getPathToCompiledMicroservices());
-        return new UnversionedAPIContext(apiService.getAPIs(request.getPathToCompiledMicroservices()).stream()
+        UnversionedAPIContext unversionedAPIContext = new UnversionedAPIContext(apiService.getAPIs(request.getPathToCompiledMicroservices()).stream()
                 .map(APIContext::getPath)
                 .filter(api -> !apiService.isVersioned(api))   //filter เอาเฉพาะ  uri ที่ไม่ตรง regex: /มี0-1ตัวก่อน api/v ตามด้วยตัวเลขอย่างน้อย 1 ตัว
                 .collect(Collectors.toSet()));
+        double a = 10/100;
+
+        double ratioOfNonVersionedAPIs = Double.valueOf(unversionedAPIContext.getCount())/Double.valueOf(apis.size());
+        unversionedAPIContext.setRatioOfNonVersionedAPIs(ratioOfNonVersionedAPIs);
+        log.info("ratioOfNonVersionedAPIs: " + ratioOfNonVersionedAPIs);
+        return unversionedAPIContext;
     }
 
     @CrossOrigin(origins = "*")
