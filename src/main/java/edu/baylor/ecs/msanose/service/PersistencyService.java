@@ -7,6 +7,7 @@ import edu.baylor.ecs.msanose.model.persistency.DatabaseType;
 import edu.baylor.ecs.rad.context.RequestContext;
 import edu.baylor.ecs.rad.service.ResourceService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class PersistencyService {
@@ -23,6 +25,7 @@ public class PersistencyService {
 
     public SharedPersistencyContext getSharedPersistency(RequestContext request){
         SharedPersistencyContext context = new SharedPersistencyContext();
+        int totalNumberOfPairOfMicroservice = 0;
 
         List<String> resourcePaths = resourceService.getResourcePaths(request.getPathToCompiledMicroservices());
         Map<String, DatabaseInstance> databases = new HashMap<>();
@@ -59,6 +62,7 @@ public class PersistencyService {
         for(Map.Entry<String, DatabaseInstance> entriesA : databases.entrySet()){
             for(Map.Entry<String, DatabaseInstance> entriesb : databases.entrySet()){
                 if(!entriesA.getKey().equals(entriesb.getKey())){ // Not the same microservice
+                    totalNumberOfPairOfMicroservice++;
                     if(entriesA.getValue() == entriesb.getValue()){     //ถ้าเป็นคนละ microservice และ databaseInstance information เหมือนกัน
 
                         // First check if B-A is in the list
@@ -78,7 +82,17 @@ public class PersistencyService {
         }
 
         context.setSharedPersistencies(sharedPersistencies);
-
+        //Calculate base metrics
+        int totalNumberOfSharedDB = context.getSharedPersistencies().size();
+        double ratioOfSharedDatabases = 0;
+        if (totalNumberOfPairOfMicroservice !=0) {
+            ratioOfSharedDatabases = totalNumberOfSharedDB/totalNumberOfPairOfMicroservice;
+        }
+        log.info("totalNumberOfPairOfMicroservice: "+totalNumberOfPairOfMicroservice);
+        log.info("totalNumberOfSharedDB: "+totalNumberOfSharedDB);
+        log.info("ratioOfSharedDatabases: "+ratioOfSharedDatabases);
+        log.info("=======================================================");
+        context.setRatioOfSharedDatabases(ratioOfSharedDatabases);
         return context;
     }
 

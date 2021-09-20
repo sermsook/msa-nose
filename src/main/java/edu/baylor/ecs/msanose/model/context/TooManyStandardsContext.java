@@ -15,4 +15,6 @@ import java.util.Set;
     Set<PresentationType> presentationTypes;
     Set<BusinessType> businessTypes;
     Set<DatabaseType> dataTypes;
+    double ratioOfExcessiveStandards;
+
 }

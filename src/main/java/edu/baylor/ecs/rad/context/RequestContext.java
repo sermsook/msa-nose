@@ -21,4 +21,5 @@ public class RequestContext {
     private String pathToCompiledMicroservices;
     private String organizationPath;
     private String outputPath;
+    private int standardThreshold;
 }

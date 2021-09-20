@@ -9,8 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
-@Data public class SharedPersistencyContext {
+@Data
+public class SharedPersistencyContext {
     List<SharedPersistency> sharedPersistencies;
+    double ratioOfSharedDatabases;
 
     public SharedPersistencyContext(){
         this.sharedPersistencies = new ArrayList<>();

@@ -10,6 +10,7 @@ import java.util.*;
 @AllArgsConstructor
 @Data public class SharedLibraryContext {
     Map<String, SharedLibrary> sharedLibraries;
+    double ratioOfSharedLibraries;
 
     public SharedLibraryContext(){
         this.sharedLibraries = new HashMap<>();

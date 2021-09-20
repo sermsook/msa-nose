@@ -56,6 +56,7 @@ public class NoseController {
         long now = System.currentTimeMillis();
         times.put("Bytecode Analysis", now - curr);   //processing time
 
+        //Done
         curr = System.currentTimeMillis();
         context.setUnversionedAPIContext(getApis(request));
         now = System.currentTimeMillis();
@@ -71,6 +72,7 @@ public class NoseController {
         now = System.currentTimeMillis();
         times.put("Wrong Cuts", now - curr);
 
+        //Done
         curr = System.currentTimeMillis();
         context.setHardCodedEndpointsContext(getHardcodedEndpoints(request));
         now = System.currentTimeMillis();
@@ -81,6 +83,7 @@ public class NoseController {
         now = System.currentTimeMillis();
         times.put("Cyclic Dependency", now - curr);
 
+        //Done
         curr = System.currentTimeMillis();
         context.setSharedPersistencyContext(getSharedPersistency(request));
         now = System.currentTimeMillis();
@@ -96,11 +99,13 @@ public class NoseController {
         now = System.currentTimeMillis();
         times.put("API Gateway", now - curr);
 
+        //Done
         curr = System.currentTimeMillis();
         context.setInappropriateServiceIntimacyContext(getInappropriateServiceIntimacy(request));
         now = System.currentTimeMillis();
         times.put("ISI", now - curr);
 
+        //Done
         curr = System.currentTimeMillis();
         context.setTooManyStandardsContext(getTooManyStandards(request));
         now = System.currentTimeMillis();
@@ -125,11 +130,15 @@ public class NoseController {
                 .map(APIContext::getPath)
                 .filter(api -> !apiService.isVersioned(api))   //filter เอาเฉพาะ  uri ที่ไม่ตรง regex: /มี0-1ตัวก่อน api/v ตามด้วยตัวเลขอย่างน้อย 1 ตัว
                 .collect(Collectors.toSet()));
-        double a = 10/100;
-
-        double ratioOfNonVersionedAPIs = Double.valueOf(unversionedAPIContext.getCount())/Double.valueOf(apis.size());
+        //Calculate base metric
+        double ratioOfNonVersionedAPIs = 0;
+        if (apis.size()!=0) {
+            ratioOfNonVersionedAPIs = Double.valueOf(unversionedAPIContext.getCount())/Double.valueOf(apis.size());
+        }
         unversionedAPIContext.setRatioOfNonVersionedAPIs(ratioOfNonVersionedAPIs);
+        log.info("totalApiInSystem: " + apis.size());
         log.info("ratioOfNonVersionedAPIs: " + ratioOfNonVersionedAPIs);
+        log.info("===================================================");
         return unversionedAPIContext;
     }
 
@@ -150,6 +159,7 @@ public class NoseController {
     public HardCodedEndpointsContext getHardcodedEndpoints(@RequestBody RequestContext request){
         HardCodedEndpointsContext hardCodedEndpointsContext = new HardCodedEndpointsContext();
         ResponseContext responseContext = restDiscoveryService.generateResponseContext(request);
+        int totalEndpointInSystem = 0;
 
         for(RestEntityContext restEntityContext : responseContext.getRestEntityContexts()){
             for(RestEntity restEntity : restEntityContext.getRestEntities()){
@@ -163,8 +173,9 @@ public class NoseController {
                 RestEntity(isClient=true, url={0}, applicationName=null, ribbonServerName=null, resourcePath=/Users/sermsook.pul/acm-core-service-2/core-service-web/target/core-service-web-4.0.27.jar, className=com.tmn.core.client.utiba.rest.BuyRestRequestor, methodName=executeRequest, returnType=java.lang.Object, path=/, httpMethod=GET, pathParams=null, queryParams=null, consumeType=null, produceType=null)
                  */
 
-                if(restEntity.isClient()){   //ถ้าเป็น client ใน rest template จะ get url มาเพื่อ check  hardcode ตาม regex ของ PORT กับ IP
+                if(restEntity.isClient()){   //ถ้าเป็น client ใน rest template จะ get url มาเพื่อ check hardcode ตาม regex ของ PORT กับ IP
                     String url = restEntity.getUrl();
+                    totalEndpointInSystem++;
                     if(url.matches(".*:[0-9]{1,5}.*")){  //regex PORT .ตามด้วยอะไรก็ได้หรือไม่มีก็ได้:ตามด้วยตัวเลข 0-9 ตั้งแต่ 1-5 ตัว.ตามด้วยอะไรก็ได้หรือไม่มีก็ได้
                         hardCodedEndpointsContext.addHardcodedEndpoint(new HardcodedEndpoint(restEntity, HardcodedEndpointType.PORT));
                     }
@@ -175,7 +186,14 @@ public class NoseController {
                 }
             }
         }
-
+        double ratioOfHardCodedEndpoints = 0;
+        if (totalEndpointInSystem != 0) {
+            ratioOfHardCodedEndpoints = hardCodedEndpointsContext.getTotalHardcodedEndpoints()/totalEndpointInSystem;
+        }
+        log.info("totalEndpointInSystem: " +totalEndpointInSystem);
+        log.info("ratioOfHardCodedEndpoints: " +ratioOfHardCodedEndpoints);
+        log.info("====================================================");
+        hardCodedEndpointsContext.setRatioOfHardCodedEndpoints(ratioOfHardCodedEndpoints);
         return hardCodedEndpointsContext;
     }
 
@@ -220,11 +238,12 @@ public class NoseController {
     @CrossOrigin(origins = "*")
     @RequestMapping(path = "/inappropriateServiceIntimacy", method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
     public InappropriateServiceIntimacyContext getInappropriateServiceIntimacy(@RequestBody RequestContext request){
-
+        int totalNumberOfPairOfMicroservice = 0;
         InappropriateServiceIntimacyContext inappropriateServiceIntimacyContext = new InappropriateServiceIntimacyContext();
         ResponseContext responseContext = restDiscoveryService.generateResponseContext(request);
 
         for(RestFlow restFlow : responseContext.getRestFlowContext().getRestFlows()){
+            totalNumberOfPairOfMicroservice++;
             String jarA = restFlow.getResourcePath();
             for(RestEntity entity : restFlow.getServers()){
                 String jarB = entity.getResourcePath();
@@ -245,6 +264,14 @@ public class NoseController {
                 }
             }
         }
+
+        //Calculate base metric
+        double ratioOfInappropriateDatabaseAccess = 0;
+        if (totalNumberOfPairOfMicroservice != 0) {
+            ratioOfInappropriateDatabaseAccess = inappropriateServiceIntimacyContext.getCount()/totalNumberOfPairOfMicroservice;
+        }
+
+        inappropriateServiceIntimacyContext.setRatioOfInappropriateDatabaseAccess(ratioOfInappropriateDatabaseAccess);
 
         return inappropriateServiceIntimacyContext;
     }
