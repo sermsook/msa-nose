@@ -25,7 +25,7 @@ public class PersistencyService {
 
     public SharedPersistencyContext getSharedPersistency(RequestContext request){
         SharedPersistencyContext context = new SharedPersistencyContext();
-        int totalNumberOfPairOfMicroservice = 0;
+        double totalNumberOfPairOfMicroservice = 0;
 
         List<String> resourcePaths = resourceService.getResourcePaths(request.getPathToCompiledMicroservices());
         Map<String, DatabaseInstance> databases = new HashMap<>();
@@ -83,11 +83,12 @@ public class PersistencyService {
 
         context.setSharedPersistencies(sharedPersistencies);
         //Calculate base metrics
-        int totalNumberOfSharedDB = context.getSharedPersistencies().size();
+        double totalNumberOfSharedDB = context.getSharedPersistencies().size();
         double ratioOfSharedDatabases = 0;
         if (totalNumberOfPairOfMicroservice !=0) {
             ratioOfSharedDatabases = totalNumberOfSharedDB/totalNumberOfPairOfMicroservice;
         }
+        log.info("****** Shared Database ******");
         log.info("totalNumberOfPairOfMicroservice: "+totalNumberOfPairOfMicroservice);
         log.info("totalNumberOfSharedDB: "+totalNumberOfSharedDB);
         log.info("ratioOfSharedDatabases: "+ratioOfSharedDatabases);

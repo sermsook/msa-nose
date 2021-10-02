@@ -6,20 +6,25 @@ import edu.baylor.ecs.rad.context.RequestContext;
 import edu.baylor.ecs.rad.context.ResponseContext;
 import edu.baylor.ecs.rad.model.RestEntity;
 import edu.baylor.ecs.rad.model.RestFlow;
+import edu.baylor.ecs.rad.service.ResourceService;
 import edu.baylor.ecs.rad.service.RestDiscoveryService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Data
 @AllArgsConstructor
 public class ESBService {
 
     private RestService restDiscoveryService;
+    private final ResourceService resourceService;
 
     public ESBContext getESBContext(RequestContext request){
         ESBContext esbContext = new ESBContext();
@@ -83,17 +88,36 @@ public class ESBService {
             int inA = sortedIncoming.get(i).getEdges();
             int inB = sortedIncoming.get(i + 1).getEdges();
             if(( inB - inA) > (2 * avgStepIn)){
-                possibleESBIn.add(sortedIncoming.get(i + 1));
+                possibleESBIn.add(sortedIncoming.get(i + 1)); //focus ที่ module ที่มี #connection เยอะ
             }
         }
 
         for(ServerPair pairOut : possibleESBOut){
             for(ServerPair pairIn : possibleESBIn){
-                if(pairIn.getPath().equals(pairOut.getPath())){  ///???????
+                if(pairIn.getPath().equals(pairOut.getPath())){  //#connection เข้าออกเท่านั้น
                     esbContext.getCandidateESBs().add(new MicroserviceContext(pairIn.getPath()));   //add ชื่อ module ที่อาจจะเป็น ESB ไปใน list
                 }
             }
         }
+
+
+        /**
+         * DaoNotes: get number of microservice in systems
+         */
+        List<String> jars = resourceService.getResourcePaths(request.getPathToCompiledMicroservices()); //ได้list path ของ JAR or WAR file in the project directory
+
+        //Calculate base metrics
+        double totalNumberOfMicroserviceInSystems = jars.size();
+        double totalNumberOfCandidateESBs = esbContext.getCandidateESBs().size();
+        double ratioOfESBMicroservices = 0;
+        if (totalNumberOfMicroserviceInSystems !=0) {
+            ratioOfESBMicroservices = totalNumberOfCandidateESBs/totalNumberOfMicroserviceInSystems;
+        }
+        log.info("****** ESB ******");
+        log.info("totalNumberOfMicroserviceInSystems: "+totalNumberOfMicroserviceInSystems);
+        log.info("totalNumberOfCandidateESBs: "+totalNumberOfCandidateESBs);
+        log.info("ratioOfESBMicroservices: "+ratioOfESBMicroservices);
+        log.info("=======================================================");
 
         return esbContext;
     }

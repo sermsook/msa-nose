@@ -3,6 +3,7 @@ package edu.baylor.ecs.rad.service;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.bytecode.ClassFile;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ import java.util.stream.Stream;
  * @version 1.1
  * @since   0.3.0
  */
+@Slf4j
 @Service
 public class ResourceService {
 
@@ -64,26 +66,46 @@ public class ResourceService {
         int maxDepth = 15;
         List<String> fileNames = new ArrayList<>();
         try {
-            Stream<Path> stream = Files.find(start, maxDepth,
-                    (path, attr) ->
-                            String.valueOf(path).toLowerCase().endsWith(".jar") ||
-                                    String.valueOf(path).toLowerCase().endsWith(".war"));
+            Stream<Path> stream =
+                    Files.find(start, maxDepth,
+                            (path, basicFileAttributes) -> {
+                                return (String.valueOf(path).toLowerCase().endsWith(".jar") ||
+                                        String.valueOf(path).toLowerCase().endsWith(".war")) &&
+                                        !String.valueOf(path).toLowerCase().contains("/.mvn/") &&
+                                        !String.valueOf(path).toLowerCase().startsWith("/usr/lib/jvm/") &&
+                                        !String.valueOf(path).toLowerCase().contains("/target/dependency/") &&
+                                        !String.valueOf(path).toLowerCase().contains("/gradle") &&
+                                        !String.valueOf(path).toLowerCase().contains("\\.mvn\\") &&
+                                        !String.valueOf(path).toLowerCase().contains("\\target\\dependency") &&
+//                                        !String.valueOf(path).toLowerCase().contains("document");
+                                        !String.valueOf(path).toLowerCase().contains("\\gradle");
+                            });
+
             fileNames = stream
-                    .sorted()
                     .map(String::valueOf)
-                    .filter((path) -> {
-                        return (String.valueOf(path).toLowerCase().endsWith(".jar") ||
-                                String.valueOf(path).toLowerCase().endsWith(".war")) &&
-                                !String.valueOf(path).toLowerCase().contains("/.mvn/") &&
-                                !String.valueOf(path).toLowerCase().startsWith("/usr/lib/jvm/") &&
-                                !String.valueOf(path).toLowerCase().contains("/target/dependency/") &&
-                                !String.valueOf(path).toLowerCase().contains("/gradle") &&
-                                !String.valueOf(path).toLowerCase().contains("\\.mvn\\") &&
-                                !String.valueOf(path).toLowerCase().contains("\\target\\dependency") &&
-                                !String.valueOf(path).toLowerCase().contains("document") &&
-                                !String.valueOf(path).toLowerCase().contains("\\gradle");
-                    })
                     .collect(Collectors.toList());
+            log.info("All microservice jar/war file names: " + fileNames);
+
+//            Stream<Path> stream = Files.find(start, maxDepth,
+//                    (path, attr) ->
+//                            String.valueOf(path).toLowerCase().endsWith(".jar") ||
+//                                    String.valueOf(path).toLowerCase().endsWith(".war"));
+//            fileNames = stream
+//                    .sorted()
+//                    .map(String::valueOf)
+//                    .filter((path) -> {
+//                        return (String.valueOf(path).toLowerCase().endsWith(".jar") ||
+//                                String.valueOf(path).toLowerCase().endsWith(".war")) &&
+//                                !String.valueOf(path).toLowerCase().contains("/.mvn/") &&
+//                                !String.valueOf(path).toLowerCase().startsWith("/usr/lib/jvm/") &&
+//                                !String.valueOf(path).toLowerCase().contains("/target/dependency/") &&
+//                                !String.valueOf(path).toLowerCase().contains("/gradle") &&
+//                                !String.valueOf(path).toLowerCase().contains("\\.mvn\\") &&
+//                                !String.valueOf(path).toLowerCase().contains("\\target\\dependency") &&
+//                                !String.valueOf(path).toLowerCase().contains("document") &&
+//                                !String.valueOf(path).toLowerCase().contains("\\gradle");
+//                    })
+//                    .collect(Collectors.toList());
         } catch(Exception e){
             e.printStackTrace();
         }

@@ -8,6 +8,7 @@ import edu.baylor.ecs.msanose.model.standards.PresentationType;
 import edu.baylor.ecs.rad.context.RequestContext;
 import edu.baylor.ecs.rad.service.ResourceService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
@@ -20,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.*;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class TooManyStandardsService {
@@ -44,6 +46,10 @@ public class TooManyStandardsService {
         }
 
         TooManyStandardsContext tooManyStandardsContext = new TooManyStandardsContext(presentationStandards, businessStandards, databaseStandards, ratioOfExcessiveStandards);
+        log.info("****** Too many standards ******");
+        log.info("totalSystemStandards: "+totalSystemStandards);
+        log.info("ratioOfExcessiveStandards: "+ratioOfExcessiveStandards);
+        log.info("=======================================================");
 
         return tooManyStandardsContext;
     }

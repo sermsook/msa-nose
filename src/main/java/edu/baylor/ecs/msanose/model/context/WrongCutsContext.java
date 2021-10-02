@@ -11,4 +11,5 @@ import java.util.List;
 @Data public class WrongCutsContext {
     List<EntityPair> entityCounts;
     List<EntityPair> possibleWrongCuts;
+    double ratioOfWrongCuts;
 }

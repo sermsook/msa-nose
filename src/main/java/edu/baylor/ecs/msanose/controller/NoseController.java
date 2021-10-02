@@ -67,6 +67,7 @@ public class NoseController {
         now = System.currentTimeMillis();
         times.put("Shared Library", now - curr);
 
+        //Done
         curr = System.currentTimeMillis();
         context.setWrongCutsContext(getWrongCuts(request));
         now = System.currentTimeMillis();
@@ -89,6 +90,7 @@ public class NoseController {
         now = System.currentTimeMillis();
         times.put("Shared Persistency", now - curr);
 
+        //Done
         curr = System.currentTimeMillis();
         context.setEsbContext(getESBUsage(request));
         now = System.currentTimeMillis();
@@ -111,8 +113,9 @@ public class NoseController {
         now = System.currentTimeMillis();
         times.put("Too Many Standards", now - curr);
 
+        //Almost Done ---> Recheck condition of d< 2sd? is it correct?
         curr = System.currentTimeMillis();
-        context.setMicroservicesGreedyContext(getMicroservicesGreedy(request));
+        context.setMicroservicesGreedyContext(getMicroservicesGreedy(request));  //NanoMicroservices
         now = System.currentTimeMillis();
         times.put("Microservice Greedy", now - curr);
 
@@ -136,6 +139,7 @@ public class NoseController {
             ratioOfNonVersionedAPIs = Double.valueOf(unversionedAPIContext.getCount())/Double.valueOf(apis.size());
         }
         unversionedAPIContext.setRatioOfNonVersionedAPIs(ratioOfNonVersionedAPIs);
+        log.info("****** Non-versioned API ******");
         log.info("totalApiInSystem: " + apis.size());
         log.info("ratioOfNonVersionedAPIs: " + ratioOfNonVersionedAPIs);
         log.info("===================================================");
@@ -159,7 +163,7 @@ public class NoseController {
     public HardCodedEndpointsContext getHardcodedEndpoints(@RequestBody RequestContext request){
         HardCodedEndpointsContext hardCodedEndpointsContext = new HardCodedEndpointsContext();
         ResponseContext responseContext = restDiscoveryService.generateResponseContext(request);
-        int totalEndpointInSystem = 0;
+        double totalEndpointInSystem = 0;
 
         for(RestEntityContext restEntityContext : responseContext.getRestEntityContexts()){
             for(RestEntity restEntity : restEntityContext.getRestEntities()){
@@ -190,6 +194,7 @@ public class NoseController {
         if (totalEndpointInSystem != 0) {
             ratioOfHardCodedEndpoints = hardCodedEndpointsContext.getTotalHardcodedEndpoints()/totalEndpointInSystem;
         }
+        log.info("****** Hard coded end point ******");
         log.info("totalEndpointInSystem: " +totalEndpointInSystem);
         log.info("ratioOfHardCodedEndpoints: " +ratioOfHardCodedEndpoints);
         log.info("====================================================");
@@ -238,7 +243,7 @@ public class NoseController {
     @CrossOrigin(origins = "*")
     @RequestMapping(path = "/inappropriateServiceIntimacy", method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
     public InappropriateServiceIntimacyContext getInappropriateServiceIntimacy(@RequestBody RequestContext request){
-        int totalNumberOfPairOfMicroservice = 0;
+        double totalNumberOfPairOfMicroservice = 0;
         InappropriateServiceIntimacyContext inappropriateServiceIntimacyContext = new InappropriateServiceIntimacyContext();
         ResponseContext responseContext = restDiscoveryService.generateResponseContext(request);
 
@@ -272,6 +277,11 @@ public class NoseController {
         }
 
         inappropriateServiceIntimacyContext.setRatioOfInappropriateDatabaseAccess(ratioOfInappropriateDatabaseAccess);
+        log.info("****** Inappropriate Database Access ******");
+        log.info("totalNumberOfPairOfMicroservice: "+totalNumberOfPairOfMicroservice);
+        log.info("totalNumberOfInappropriateDBAccess: "+inappropriateServiceIntimacyContext.getCount());
+        log.info("ratioOfInappropriateDatabaseAccess: "+ratioOfInappropriateDatabaseAccess);
+        log.info("=======================================================");
 
         return inappropriateServiceIntimacyContext;
     }

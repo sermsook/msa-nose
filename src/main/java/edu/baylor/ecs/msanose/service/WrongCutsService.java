@@ -6,11 +6,13 @@ import edu.baylor.ecs.rad.context.RequestContext;
 import edu.baylor.ecs.rad.service.ResourceService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class WrongCutsService {
@@ -21,6 +23,7 @@ public class WrongCutsService {
     public WrongCutsContext getWrongCuts(RequestContext request){
         WrongCutsContext wrongCutsContext = new WrongCutsContext();
         Map<String, Integer> counts = new HashMap<>();
+
         List<String> jars = resourceService.getResourcePaths(request.getPathToCompiledMicroservices()); //ได้list path ของ JAR or WAR file in the project directory
 
         for(String jar : jars){
@@ -73,6 +76,19 @@ public class WrongCutsService {
 
         wrongCutsContext.setEntityCounts(sorted);
         wrongCutsContext.setPossibleWrongCuts(possibleWrongCuts);
+
+        //Calculate base metrics
+        double totalNumberOfMicroserviceInSystems = jars.size();
+        double totalNumberOfPossibleWrongCuts = wrongCutsContext.getPossibleWrongCuts().size();
+        double ratioOfWrongCuts = 0;
+        if (totalNumberOfMicroserviceInSystems !=0) {
+            ratioOfWrongCuts = totalNumberOfPossibleWrongCuts/totalNumberOfMicroserviceInSystems;
+        }
+        log.info("****** Wrong Cuts ******");
+        log.info("totalNumberOfMicroserviceInSystems: "+totalNumberOfMicroserviceInSystems);
+        log.info("totalNumberOfPossibleWrongCuts: "+totalNumberOfPossibleWrongCuts);
+        log.info("ratioOfWrongCuts: "+ratioOfWrongCuts);
+        log.info("=======================================================");
 
         return wrongCutsContext;
     }

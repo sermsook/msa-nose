@@ -12,7 +12,7 @@ import java.util.List;
 @Data public class InappropriateServiceIntimacyContext {
 
     private List<SharedIntimacy> sharedIntimacies;
-    private int count;
+    private double count;
     private double ratioOfInappropriateDatabaseAccess;
 
     public InappropriateServiceIntimacyContext(){
