@@ -60,7 +60,7 @@ public class WrongCutsService {
         }
 
         double std = Math.sqrt(numerator / (trimmed.size() - 1));   //std = sqrt(numerator/(#jar ที่มี entity > 1 - 1))
-        log.info("std is " +std+ "---> 2sd is " + 2*std);
+//        log.info("std is " +std+ "---> 2sd is " + 2*std);
 
         List<EntityPair> possibleWrongCuts = new ArrayList<>();
         for(EntityPair pair : sorted){
@@ -73,8 +73,8 @@ public class WrongCutsService {
             double d = pair.getEntityCount() - avgEntityCount;
             if(d > (2 * std) || d < -(2 * std)){   //ถ้า d > 2sd ก็มีความเป็นไปได้ที่จะเป็น WrongCuts
                 possibleWrongCuts.add(pair);
-                log.info(pair.getPath());
-                log.info("d = " + d);
+//                log.info(pair.getPath());
+//                log.info("d = " + d);
             }
         }
 
