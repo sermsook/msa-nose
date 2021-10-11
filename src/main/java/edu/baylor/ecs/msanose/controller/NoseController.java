@@ -1,6 +1,7 @@
 package edu.baylor.ecs.msanose.controller;
 
 import edu.baylor.ecs.msanose.model.SharedIntimacy;
+import edu.baylor.ecs.msanose.model.UnorderedPair;
 import edu.baylor.ecs.msanose.model.context.*;
 import edu.baylor.ecs.msanose.model.hardcodedEndpoint.HardcodedEndpoint;
 import edu.baylor.ecs.msanose.model.hardcodedEndpoint.HardcodedEndpointType;
@@ -8,18 +9,13 @@ import edu.baylor.ecs.msanose.service.*;
 import edu.baylor.ecs.rad.context.RequestContext;
 import edu.baylor.ecs.rad.context.ResponseContext;
 import edu.baylor.ecs.rad.context.RestEntityContext;
-import edu.baylor.ecs.rad.context.RestFlowContext;
 import edu.baylor.ecs.rad.model.RestEntity;
 import edu.baylor.ecs.rad.model.RestFlow;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.jni.Time;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -85,7 +81,7 @@ public class NoseController {
         now = System.currentTimeMillis();
         times.put("Cyclic Dependency", now - curr);
 
-        //Done --->> Need to recheck logic of find #ofPairOfMicroservice
+        //Done
         curr = System.currentTimeMillis();
         context.setSharedPersistencyContext(getSharedPersistency(request));
         now = System.currentTimeMillis();
@@ -102,7 +98,7 @@ public class NoseController {
         now = System.currentTimeMillis();
         times.put("API Gateway", now - curr);
 
-        //Done --->> Need to recheck logic of find #ofPairOfMicroservice
+        //Done
         curr = System.currentTimeMillis();
         context.setInappropriateServiceIntimacyContext(getInappropriateServiceIntimacy(request));
         now = System.currentTimeMillis();
@@ -244,15 +240,37 @@ public class NoseController {
     @CrossOrigin(origins = "*")
     @RequestMapping(path = "/inappropriateServiceIntimacy", method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
     public InappropriateServiceIntimacyContext getInappropriateServiceIntimacy(@RequestBody RequestContext request){
-        double totalNumberOfPairOfMicroservice = 0;
         InappropriateServiceIntimacyContext inappropriateServiceIntimacyContext = new InappropriateServiceIntimacyContext();
         ResponseContext responseContext = restDiscoveryService.generateResponseContext(request);
 
+        /**
+         * DaoNote
+         */
+//        Set<UnorderedPair<String>> testPairs = new HashSet<> ();
+//        UnorderedPair<String> flowsPair1 = new UnorderedPair<>("A", "B");
+//        UnorderedPair<String> flowsPair2 = new UnorderedPair<>("C", "D");
+//        UnorderedPair<String> flowsPair3 = new UnorderedPair<>("B", "A");
+//        UnorderedPair<String> flowsPair4 = new UnorderedPair<>("D", "C");
+//        UnorderedPair<String> flowsPair5 = new UnorderedPair<>("D", "E");
+//        testPairs.add(flowsPair1);
+//        testPairs.add(flowsPair2);
+//        testPairs.add(flowsPair3);
+//        testPairs.add(flowsPair4);
+//        testPairs.add(flowsPair5);
+//        log.info("testPairs: "+  testPairs);
+//        log.info("testPairs size: "+  testPairs.size());
+
+        Set<UnorderedPair<String>> pairs = new HashSet<> ();
         for(RestFlow restFlow : responseContext.getRestFlowContext().getRestFlows()){
-            totalNumberOfPairOfMicroservice++;
             String jarA = restFlow.getResourcePath();
+//            log.info("++++++++++++++++++++++++++++++++++++++++++++");
+//            log.info("jarA: " + jarA);
+//            log.info("Servers: " + restFlow.getServers().size());
             for(RestEntity entity : restFlow.getServers()){
                 String jarB = entity.getResourcePath();
+//                log.info("jarB: " + jarB);
+                UnorderedPair<String> flowsPair = new UnorderedPair<>(jarA, jarB);
+                pairs.add(flowsPair);
 
                 // Get two sets of entity objects
                 List<String> entitiesA = entityService.getEntitiesPerJar(request, jarA);
@@ -272,6 +290,8 @@ public class NoseController {
         }
 
         //Calculate base metric
+        double totalNumberOfPairOfMicroservice = pairs.size();
+
         double ratioOfInappropriateDatabaseAccess = 0;
         if (totalNumberOfPairOfMicroservice != 0) {
             ratioOfInappropriateDatabaseAccess = inappropriateServiceIntimacyContext.getCount()/totalNumberOfPairOfMicroservice;

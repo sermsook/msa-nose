@@ -25,8 +25,6 @@ public class PersistencyService {
 
     public SharedPersistencyContext getSharedPersistency(RequestContext request){
         SharedPersistencyContext context = new SharedPersistencyContext();
-        double totalNumberOfPairOfMicroservice = 0;
-
         List<String> resourcePaths = resourceService.getResourcePaths(request.getPathToCompiledMicroservices());
         Map<String, DatabaseInstance> databases = new HashMap<>();
         for (String path : resourcePaths) {    //วน check jar แต่ละตัว
@@ -62,7 +60,6 @@ public class PersistencyService {
         for(Map.Entry<String, DatabaseInstance> entriesA : databases.entrySet()){
             for(Map.Entry<String, DatabaseInstance> entriesb : databases.entrySet()){
                 if(!entriesA.getKey().equals(entriesb.getKey())){ // Not the same microservice
-                    totalNumberOfPairOfMicroservice++;
                     if(entriesA.getValue() == entriesb.getValue()){     //ถ้าเป็นคนละ microservice และ databaseInstance information เหมือนกัน
 
                         // First check if B-A is in the list
@@ -83,6 +80,10 @@ public class PersistencyService {
 
         context.setSharedPersistencies(sharedPersistencies);
         //Calculate base metrics
+        int n = databases.size();
+        log.info("databases: " + databases);
+        log.info("numberOfDBPair: " + n);
+        double totalNumberOfPairOfMicroservice = (n * (n+1))/2;
         double totalNumberOfSharedDB = context.getSharedPersistencies().size();
         double ratioOfSharedDatabases = 0;
         if (totalNumberOfPairOfMicroservice !=0) {
