@@ -113,6 +113,8 @@ public class ESBService {
         if (totalNumberOfMicroserviceInSystems !=0) {
             ratioOfESBMicroservices = totalNumberOfCandidateESBs/totalNumberOfMicroserviceInSystems;
         }
+
+        esbContext.setRatioOfESBMicroservices(ratioOfESBMicroservices);
         log.info("****** ESB ******");
         log.info("totalNumberOfMicroserviceInSystems: "+totalNumberOfMicroserviceInSystems);
         log.info("totalNumberOfCandidateESBs: "+totalNumberOfCandidateESBs);

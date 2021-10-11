@@ -88,12 +88,14 @@ public class PersistencyService {
         if (totalNumberOfPairOfMicroservice !=0) {
             ratioOfSharedDatabases = totalNumberOfSharedDB/totalNumberOfPairOfMicroservice;
         }
+        context.setRatioOfSharedDatabases(ratioOfSharedDatabases);
+
         log.info("****** Shared Database ******");
         log.info("totalNumberOfPairOfMicroservice: "+totalNumberOfPairOfMicroservice);
         log.info("totalNumberOfSharedDB: "+totalNumberOfSharedDB);
         log.info("ratioOfSharedDatabases: "+ratioOfSharedDatabases);
         log.info("=======================================================");
-        context.setRatioOfSharedDatabases(ratioOfSharedDatabases);
+
         return context;
     }
 

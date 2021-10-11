@@ -26,33 +26,41 @@ public class GreedyService {
         Map<String, Integer> counts = new HashMap<>();
 
         List<String> jars = resourceService.getResourcePaths(request.getPathToCompiledMicroservices()); //ได้list path ของ JAR or WAR file in the project directory
-        File directory = new File(request.getPathToCompiledMicroservices());     //ex.   /Users/sermsook.pul/acm-core-service-2
-
-        // Get all sub-directories from a directory.
-        File[] fList = directory.listFiles();
-        List<String> subdirectories = new ArrayList<>();
-        if(fList != null) {
-            for (File file : fList) {
-                if (file.isDirectory()) {
-                    subdirectories.add(file.getAbsolutePath());
-                }
-            }
-        }
-
-        // For each, get entity counts and static file counts
-        for(String dir : subdirectories){   //DaoNotes: dir = each module    ex. /Users/sermsook.pul/acm-core-service-2/core-service-web
-            List<String> entities = entityService.getEntitiesPerFolder(dir);      //all entity class name ex. [TmnProfileData, TmnProfile, TmnAddressPK, TmnAddress, LogableHeaderMataInfo, TmnProfileDataPK, TmnDocumentPK, TmnDocument]
-            List<File> staticFiles = new ArrayList<>();
-            getStaticFiles(dir, staticFiles);  //DaoNotes: get all front-end file
-            microservicesGreedyContext.addMetric(new MicroserviceMetric(dir, staticFiles.size(), entities.size()));
-            // System.out.println(dir + " - " + entities.size() + " " + staticFiles.size());
-
-            counts.put(dir, entities.size());
-        }
+        /**
+         * Old Code
+         */
+//        File directory = new File(request.getPathToCompiledMicroservices());     //ex.   /Users/sermsook.pul/acm-core-service-2
+//
+//        // Get all sub-directories from a directory.
+//        File[] fList = directory.listFiles();
+//        List<String> subdirectories = new ArrayList<>();
+//        if(fList != null) {
+//            for (File file : fList) {
+//                if (file.isDirectory()) {
+//                    subdirectories.add(file.getAbsolutePath());
+//                }
+//            }
+//        }
+//
+//        // For each, get entity counts and static file counts
+//        for(String dir : subdirectories){   //DaoNotes: dir = each module    ex. /Users/sermsook.pul/acm-core-service-2/core-service-web
+//            List<String> entities = entityService.getEntitiesPerFolder(dir);      //all entity class name ex. [TmnProfileData, TmnProfile, TmnAddressPK, TmnAddress, LogableHeaderMataInfo, TmnProfileDataPK, TmnDocumentPK, TmnDocument]
+//            List<File> staticFiles = new ArrayList<>();
+//            getStaticFiles(dir, staticFiles);  //DaoNotes: get all front-end file
+//            microservicesGreedyContext.addMetric(new MicroserviceMetric(dir, staticFiles.size(), entities.size()));
+//            // System.out.println(dir + " - " + entities.size() + " " + staticFiles.size());
+//
+//            counts.put(dir, entities.size());
+//        }
 
         /**
          * DaoNotes: Add logic to find outliers (2sd)
          */
+        for(String jar : jars){
+            List<String> entities = entityService.getEntitiesPerJar(request, jar); //หา entity class name ทั้งหมดใน jar โดยดูจาก annotation @Entity หรือ @Document
+            counts.put(extractName(jar), entities.size());  //extract ชื่อ jar file ; counts = list(jarName, #entity)
+        }
+
         List<EntityPair> sorted = counts.entrySet()
                 .stream()
                 .map(x -> new EntityPair(x.getKey(), x.getValue()))
@@ -69,7 +77,9 @@ public class GreedyService {
         for (EntityPair pair : trimmed) {
             avgEntityCount += pair.getEntityCount();
         }
-        avgEntityCount = avgEntityCount / trimmed.size();  //#entity ทั้งหมด/#jar ที่มี entity > 1
+
+        avgEntityCount = avgEntityCount / trimmed.size();  //#entity ทั้งหมดทุกservice/#microservice            [#microservice =   #jar ที่มี entity > 1]
+        log.info("avgEntityCount: "+avgEntityCount);
 
         double numerator = 0.0;
         for (EntityPair pair : trimmed) {
@@ -77,12 +87,21 @@ public class GreedyService {
         }
 
         double std = Math.sqrt(numerator / (trimmed.size() - 1));   //std = sqrt(numerator/(#jar ที่มี entity > 1 - 1))
+        log.info("std is " +std+ "---> 2sd is " + 2*std);
 
         List<EntityPair> possibleNanoMicroservices = new ArrayList<>();
         for(EntityPair pair : sorted){
-            double d = Math.max(avgEntityCount, pair.getEntityCount()) - Math.min(avgEntityCount, pair.getEntityCount());  //d = #entity มากสุด - #entity น้อยสุด
-            if(d > (2 * std)){   //ถ้า d < 2sd ก็มีความเป็นไปได้ที่จะเป็น Nano Microservice
+            log.info(pair.getPath());
+            log.info("#entityOfService: " +  pair.getEntityCount());
+//            double d = Math.max(avgEntityCount, pair.getEntityCount()) - Math.min(avgEntityCount, pair.getEntityCount());  //d = #entity มากสุด - #entity น้อยสุด
+            double d = pair.getEntityCount() - avgEntityCount;
+            log.info("d = " + d);
+            log.info("****************************************");
+            if(d < -(2 * std)){   //ถ้า d < -2sd ก็มีความเป็นไปได้ที่จะเป็น Nano Microservice
                 possibleNanoMicroservices.add(pair);
+                log.info(pair.getPath());
+                log.info("small d = " + d);
+                log.info("++++++++++++++++++++++++++++++++++++++");
             }
         }
 
@@ -93,6 +112,8 @@ public class GreedyService {
         if (totalNumberOfMicroserviceInSystems !=0) {
             ratioOfNanoMicroservices = totalNumberOfNanoMicroservices/totalNumberOfMicroserviceInSystems;
         }
+
+        microservicesGreedyContext.setRatioOfNanoMicroservices(ratioOfNanoMicroservices);
         log.info("****** NanoMicroservices ******");
         log.info("totalNumberOfMicroserviceInSystems: "+totalNumberOfMicroserviceInSystems);
         log.info("totalNumberOfNanoMicroservices: "+totalNumberOfNanoMicroservices);
@@ -116,6 +137,15 @@ public class GreedyService {
                     getStaticFiles(file.getAbsolutePath(), files);
                 }
             }
+    }
+
+    private String extractName(String path){
+        int begin = path.lastIndexOf("/");
+        int end = path.lastIndexOf('.');
+        if(begin == -1 || end == -1){
+            return path;
+        }
+        return path.substring(begin, end);
     }
 
 }

@@ -60,6 +60,7 @@ public class WrongCutsService {
         }
 
         double std = Math.sqrt(numerator / (trimmed.size() - 1));   //std = sqrt(numerator/(#jar ที่มี entity > 1 - 1))
+        log.info("std is " +std+ "---> 2sd is " + 2*std);
 
         List<EntityPair> possibleWrongCuts = new ArrayList<>();
         for(EntityPair pair : sorted){
@@ -68,9 +69,12 @@ public class WrongCutsService {
 //                possibleWrongCuts.add(pair);
 //            }
 
-            double d = Math.max(avgEntityCount, pair.getEntityCount()) - Math.min(avgEntityCount, pair.getEntityCount());  //d = #entity มากสุด - #entity น้อยสุด
-            if(d > (2 * std)){   //ถ้า d > 2sd ก็มีความเป็นไปได้ที่จะเป็น WrongCuts
+//            double d = Math.max(avgEntityCount, pair.getEntityCount()) - Math.min(avgEntityCount, pair.getEntityCount());  //d = max(avgEntityCount, #entityofEachMicroservice) - min(avgEntityCount, #entityofEachMicroservice)      #entity มากสุด - #entity น้อยสุด
+            double d = pair.getEntityCount() - avgEntityCount;
+            if(d > (2 * std) || d < -(2 * std)){   //ถ้า d > 2sd ก็มีความเป็นไปได้ที่จะเป็น WrongCuts
                 possibleWrongCuts.add(pair);
+                log.info(pair.getPath());
+                log.info("d = " + d);
             }
         }
 
@@ -84,6 +88,7 @@ public class WrongCutsService {
         if (totalNumberOfMicroserviceInSystems !=0) {
             ratioOfWrongCuts = totalNumberOfPossibleWrongCuts/totalNumberOfMicroserviceInSystems;
         }
+        wrongCutsContext.setRatioOfWrongCuts(ratioOfWrongCuts);
         log.info("****** Wrong Cuts ******");
         log.info("totalNumberOfMicroserviceInSystems: "+totalNumberOfMicroserviceInSystems);
         log.info("totalNumberOfPossibleWrongCuts: "+totalNumberOfPossibleWrongCuts);

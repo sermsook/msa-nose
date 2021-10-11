@@ -84,7 +84,7 @@ public class NoseController {
         now = System.currentTimeMillis();
         times.put("Cyclic Dependency", now - curr);
 
-        //Done
+        //Done --->> Need to recheck logic of find #ofPairOfMicroservice
         curr = System.currentTimeMillis();
         context.setSharedPersistencyContext(getSharedPersistency(request));
         now = System.currentTimeMillis();
@@ -101,7 +101,7 @@ public class NoseController {
         now = System.currentTimeMillis();
         times.put("API Gateway", now - curr);
 
-        //Done
+        //Done --->> Need to recheck logic of find #ofPairOfMicroservice
         curr = System.currentTimeMillis();
         context.setInappropriateServiceIntimacyContext(getInappropriateServiceIntimacy(request));
         now = System.currentTimeMillis();
@@ -109,11 +109,11 @@ public class NoseController {
 
         //Done
         curr = System.currentTimeMillis();
-        context.setTooManyStandardsContext(getTooManyStandards(request));
+        context.setTooManyStandardsContext(getTooManyStandards(request));   //Need to change calulate logic not use ratio anymore
         now = System.currentTimeMillis();
         times.put("Too Many Standards", now - curr);
 
-        //Almost Done ---> Recheck condition of d< 2sd? is it correct?
+        //Done ---> Already recheck logic
         curr = System.currentTimeMillis();
         context.setMicroservicesGreedyContext(getMicroservicesGreedy(request));  //NanoMicroservices
         now = System.currentTimeMillis();
