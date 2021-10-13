@@ -137,12 +137,15 @@ public class PersistencyService {
     }
 
     private static void forEachValue(Map<String, Object> source, String base, BiConsumer<? super String, ? super Object> action) {
-        for (final Map.Entry<String, Object> entry : source.entrySet()) {
-            if (entry.getValue() instanceof Map) {
-                forEachValue((Map<String, Object>) entry.getValue(), base.concat(".").concat(entry.getKey()), action);
-            } else {
-                action.accept(base.concat(".").concat(entry.getKey()).substring(1), entry.getValue());
+        if(source != null) {
+            for (final Map.Entry<String, Object> entry : source.entrySet()) {
+                if (entry.getValue() instanceof Map) {
+                    forEachValue((Map<String, Object>) entry.getValue(), base.concat(".").concat(entry.getKey()), action);
+                } else {
+                    action.accept(base.concat(".").concat(entry.getKey()).substring(1), entry.getValue());
+                }
             }
         }
+
     }
 }
