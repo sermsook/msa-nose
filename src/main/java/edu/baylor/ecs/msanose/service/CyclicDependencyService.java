@@ -109,7 +109,7 @@ public class CyclicDependencyService {
             vertexMap.put(entity.getResourcePath(), ndx);   //<node, index>
             ndx++;
         }
-        log.info("All microservice in system: " +vertexMap);
+//        log.info("All microservice in system: " +vertexMap);
         // Construct edges in adjacency list
         V = responseContext.getRestEntityContexts().size();
         adjList = new LinkedList<>();

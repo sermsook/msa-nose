@@ -20,4 +20,7 @@ import java.util.Map;
     InappropriateServiceIntimacyContext inappropriateServiceIntimacyContext;
     TooManyStandardsContext tooManyStandardsContext;
     Map<String, Long> times;
+    MicroserviceDesignMetricsContext microserviceDesignMetrics;
+    QualityAttributesContext qualityAttributes;
+
 }

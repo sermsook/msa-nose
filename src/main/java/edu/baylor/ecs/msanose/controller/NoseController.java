@@ -121,7 +121,22 @@ public class NoseController {
 
         context.setTimes(times);
 
+        calculateDerivedBaseMetric(context);
+        calculateQualityAttributesFactor(context);
+
         return context;
+    }
+
+    public void calculateDerivedBaseMetric(ApplicationSmellsContext context) {
+        MicroserviceDesignMetricsContext derivedMetric = new MicroserviceDesignMetricsContext();
+        derivedMetric.derivedMetric(context);
+        context.setMicroserviceDesignMetrics(derivedMetric);
+    }
+
+    public void calculateQualityAttributesFactor(ApplicationSmellsContext context) {
+        QualityAttributesContext qualityAttributes = new QualityAttributesContext();
+        qualityAttributes.calculateQualityAttributesFactor(context);
+        context.setQualityAttributes(qualityAttributes);
     }
 
     //Smell 5.10 API Versioning from refPaper#3
