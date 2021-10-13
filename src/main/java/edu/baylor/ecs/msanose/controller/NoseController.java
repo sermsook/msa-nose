@@ -77,8 +77,9 @@ public class NoseController {
         now = System.currentTimeMillis();
         times.put("Hardcoded Enpoints", now - curr);
 
+        //Done
         curr = System.currentTimeMillis();
-        context.setCyclicDependency(getCyclicDependency(request));
+        context.setCyclicDependencyContext(getCyclicDependency(request));
         now = System.currentTimeMillis();
         times.put("Cyclic Dependency", now - curr);
 
@@ -203,7 +204,7 @@ public class NoseController {
 
     @CrossOrigin(origins = "*")
     @RequestMapping(path = "/cyclicDependency", method = RequestMethod.POST, produces = "application/json; charset=UTF-8", consumes = {"text/plain", "application/*"})
-    public boolean getCyclicDependency(@RequestBody RequestContext request){
+    public CyclicDependencyContext getCyclicDependency(@RequestBody RequestContext request){
         return cyclicDependencyService.getCyclicDependencies(request);
     }
 

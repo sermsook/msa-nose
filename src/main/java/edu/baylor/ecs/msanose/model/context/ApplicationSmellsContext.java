@@ -12,7 +12,7 @@ import java.util.Map;
     HardCodedEndpointsContext hardCodedEndpointsContext;
     ESBContext esbContext;
     NoAPIGatewayContext APIGatewayContext;
-    boolean cyclicDependency;
+    CyclicDependencyContext cyclicDependencyContext;
     SharedPersistencyContext sharedPersistencyContext;
     SharedLibraryContext sharedLibraryContext;
     MicroservicesGreedyContext microservicesGreedyContext;
