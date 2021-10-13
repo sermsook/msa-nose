@@ -22,4 +22,6 @@ public class RequestContext {
     private String organizationPath;
     private String outputPath;
     private int standardThreshold;
+    private int endpointThreshold;   //endpoint is a microservice --> endpointThreshold = 50
+    private boolean isHasApiGateway;
 }

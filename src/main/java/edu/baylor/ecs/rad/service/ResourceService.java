@@ -84,7 +84,7 @@ public class ResourceService {
             fileNames = stream
                     .map(String::valueOf)
                     .collect(Collectors.toList());
-            log.info("All microservice jar/war file names: " + fileNames);
+//            log.info("All microservice jar/war file names: " + fileNames);
 
 //            Stream<Path> stream = Files.find(start, maxDepth,
 //                    (path, attr) ->

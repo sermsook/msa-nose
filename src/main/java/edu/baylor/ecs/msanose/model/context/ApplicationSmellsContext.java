@@ -11,7 +11,7 @@ import java.util.Map;
     UnversionedAPIContext unversionedAPIContext;
     HardCodedEndpointsContext hardCodedEndpointsContext;
     ESBContext esbContext;
-    boolean APIGateway;
+    NoAPIGatewayContext APIGatewayContext;
     boolean cyclicDependency;
     SharedPersistencyContext sharedPersistencyContext;
     SharedLibraryContext sharedLibraryContext;

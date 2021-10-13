@@ -39,7 +39,7 @@ public class TooManyStandardsService {
         if (totalSystemStandards <= request.getStandardThreshold()) {
             ratioOfExcessiveStandards = 0;
         } else {
-            ratioOfExcessiveStandards = (totalSystemStandards - request.getStandardThreshold())/request.getStandardThreshold();
+            ratioOfExcessiveStandards = (totalSystemStandards - request.getStandardThreshold())/totalSystemStandards;
             if (ratioOfExcessiveStandards > 1) {
                 ratioOfExcessiveStandards = 1;
             }

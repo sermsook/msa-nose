@@ -17,9 +17,9 @@ public class RestService {
     }
 
     public ResponseContext generateResponseContext(RequestContext requestContext){
-        if(this.cache == null){
+//        if(this.cache == null){
             this.cache = restDiscoveryService.generateResponseContext(requestContext);
-        }
+//        }
 
         return this.cache;
     }
