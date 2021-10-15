@@ -60,7 +60,7 @@ public class PersistencyService {
         for(Map.Entry<String, DatabaseInstance> entriesA : databases.entrySet()){
             for(Map.Entry<String, DatabaseInstance> entriesb : databases.entrySet()){
                 if(!entriesA.getKey().equals(entriesb.getKey())){ // Not the same microservice
-                    if(entriesA.getValue() == entriesb.getValue()){     //ถ้าเป็นคนละ microservice และ databaseInstance information เหมือนกัน
+                    if(entriesA.getValue().equals(entriesb.getValue())){     //ถ้าเป็นคนละ microservice และ databaseInstance information เหมือนกัน
 
                         // First check if B-A is in the list
                         boolean exists = false;
@@ -82,9 +82,10 @@ public class PersistencyService {
         //Calculate base metrics
         int n = databases.size();
         log.info("databases: " + databases);
-        log.info("numberOfDBPair: " + n);
-        double totalNumberOfPairOfMicroservice = (n * (n+1))/2;
-        double totalNumberOfSharedDB = context.getSharedPersistencies().size();
+        log.info("numberOfMicroserviceAndDBPair: " + n);
+        double totalNumberOfPairOfMicroservice = ((n * (n+1))/2) - n; //Not count duplicate (A,B) (B,A) and compare with themselve (A,A)
+        double totalNumberOfMicroserviceWithSharedDB = context.getSharedPersistencies().size();  //Eg. [microA, microB, microC] --> PairOfShared = 3
+        double totalNumberOfSharedDB = ((totalNumberOfMicroserviceWithSharedDB * (totalNumberOfMicroserviceWithSharedDB + 1))/2) - totalNumberOfMicroserviceWithSharedDB;
         double ratioOfSharedDatabases = 0;
         if (totalNumberOfPairOfMicroservice !=0) {
             ratioOfSharedDatabases = totalNumberOfSharedDB/totalNumberOfPairOfMicroservice;
@@ -93,7 +94,8 @@ public class PersistencyService {
 
         log.info("****** Shared Database ******");
         log.info("totalNumberOfPairOfMicroservice: "+totalNumberOfPairOfMicroservice);
-        log.info("totalNumberOfSharedDB: "+totalNumberOfSharedDB);
+        log.info("totalNumberOfMicroserviceWithSharedDB: "+totalNumberOfMicroserviceWithSharedDB);
+        log.info("totalNumberOfPairOfMicroserviceWithSharedDB: "+totalNumberOfSharedDB);
         log.info("ratioOfSharedDatabases: "+ratioOfSharedDatabases);
         log.info("=======================================================");
 
