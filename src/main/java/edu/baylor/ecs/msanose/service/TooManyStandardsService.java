@@ -34,7 +34,7 @@ public class TooManyStandardsService {
         Set<PresentationType> presentationStandards = getPresentationStandards(request);  //check ว่ามี dependencies lib อะไรบ้างใน package.json  {react, angular, static}
         Set<BusinessType> businessStandards = getBusinessStandards(request); //วนเช็คแต่ละ dependency ในแต่ละ pom.xml ว่ามีใช้ standard lib อะไรบ้าง
         Set<DatabaseType> databaseStandards = getDataStandards(request); //get all database type ที่อยู่ในทุก .yml file
-        int totalSystemStandards = presentationStandards.size() + businessStandards.size() + databaseStandards.size();
+        double totalSystemStandards = presentationStandards.size() + businessStandards.size() + databaseStandards.size();
 
         if (totalSystemStandards <= request.getStandardThreshold()) {
             ratioOfExcessiveStandards = 0;

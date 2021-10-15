@@ -83,7 +83,7 @@ public class NoseController {
         now = System.currentTimeMillis();
         times.put("Cyclic Dependency", now - curr);
 
-        //Done
+        //Done ---> recheck logic of find totalNumberOfPairOfMicroservice
         curr = System.currentTimeMillis();
         context.setSharedPersistencyContext(getSharedPersistency(request));
         now = System.currentTimeMillis();
@@ -101,7 +101,7 @@ public class NoseController {
         now = System.currentTimeMillis();
         times.put("API Gateway", now - curr);
 
-        //Done
+        //Done ---> recheck logic of find totalNumberOfPairOfMicroservice
         curr = System.currentTimeMillis();
         context.setInappropriateServiceIntimacyContext(getInappropriateServiceIntimacy(request));
         now = System.currentTimeMillis();
