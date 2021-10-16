@@ -58,7 +58,7 @@ public class GreedyService {
          */
         for(String jar : jars){
             List<String> entities = entityService.getEntitiesPerJar(request, jar); //หา entity class name ทั้งหมดใน jar โดยดูจาก annotation @Entity หรือ @Document
-            counts.put(extractName(jar), entities.size());  //extract ชื่อ jar file ; counts = list(jarName, #entity)
+            counts.put(extractName(jar), entities.size());  //extract ชื่อ jar file ; counts = list(jarName, #entity class)
         }
 
         List<EntityPair> sorted = counts.entrySet()
@@ -73,13 +73,21 @@ public class GreedyService {
                 .sorted(Comparator.comparing(EntityPair::getEntityCount))
                 .collect(Collectors.toList());
 
+        for (EntityPair eachService: sorted) {
+            log.info("service name: " + eachService.getPath() + ", entity class count: " + eachService.getEntityCount());
+        }
+        log.info("---------------------------------------------------------------------------------------------------------");
+        for (EntityPair eachService: trimmed) {
+            log.info("service name: " + eachService.getPath() + ", entity class count: " + eachService.getEntityCount());
+        }
+
         double avgEntityCount = 0;
         for (EntityPair pair : trimmed) {
             avgEntityCount += pair.getEntityCount();
         }
 
         avgEntityCount = avgEntityCount / trimmed.size();  //#entity ทั้งหมดทุกservice/#microservice            [#microservice =   #jar ที่มี entity > 1]
-//        log.info("avgEntityCount: "+avgEntityCount);
+        log.info("avgEntityCount: "+avgEntityCount);
 
         double numerator = 0.0;
         for (EntityPair pair : trimmed) {
@@ -87,22 +95,23 @@ public class GreedyService {
         }
 
         double std = Math.sqrt(numerator / (trimmed.size() - 1));   //std = sqrt(numerator/(#jar ที่มี entity > 1 - 1))
-//        log.info("std is " +std+ "---> 2sd is " + 2*std);
+        log.info("std is " +std+ "---> 2sd is " + 2*std);
 
         List<EntityPair> possibleNanoMicroservices = new ArrayList<>();
         for(EntityPair pair : sorted){
-//            log.info(pair.getPath());
-//            log.info("#entityOfService: " +  pair.getEntityCount());
+            MicroserviceMetric microserviceMetric = new MicroserviceMetric();
+            microserviceMetric.setPath(pair.getPath());
+            microserviceMetric.setEntityFileCount(pair.getEntityCount());
 //            double d = Math.max(avgEntityCount, pair.getEntityCount()) - Math.min(avgEntityCount, pair.getEntityCount());  //d = #entity มากสุด - #entity น้อยสุด
             double d = pair.getEntityCount() - avgEntityCount;
+//            log.info(pair.getPath());
 //            log.info("d = " + d);
-//            log.info("****************************************");
             if(d < -(2 * std)){   //ถ้า d < -2sd ก็มีความเป็นไปได้ที่จะเป็น Nano Microservice
+                microservicesGreedyContext.addGreedyMicroservice(microserviceMetric);
                 possibleNanoMicroservices.add(pair);
-//                log.info(pair.getPath());
 //                log.info("small d = " + d);
-//                log.info("++++++++++++++++++++++++++++++++++++++");
             }
+//            log.info("++++++++++++++++++++++++++++++++++++++");
         }
 
         //Calculate base metrics
@@ -114,7 +123,7 @@ public class GreedyService {
         }
 
         microservicesGreedyContext.setRatioOfNanoMicroservices(ratioOfNanoMicroservices);
-        log.info("****** NanoMicroservices ******");
+        log.info("****** Nano Microservices ******");
         log.info("totalNumberOfMicroserviceInSystems: "+totalNumberOfMicroserviceInSystems);
         log.info("totalNumberOfNanoMicroservices: "+totalNumberOfNanoMicroservices);
         log.info("ratioOfNanoMicroservices: "+ratioOfNanoMicroservices);
