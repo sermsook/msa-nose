@@ -64,7 +64,8 @@ public class ESBService {
             int outB = sortedOutgoing.get(i + 1).getEdges();
             avgStepOut += (outB - outA);
         }
-        avgStepOut = avgStepOut / (sortedOutgoing.size() - 1);
+        avgStepOut = avgStepOut / (sortedOutgoing.size() - 1); //avgStepOut is sd
+        log.info("sd is " + avgStepOut + "  ---> 2sd is " + (2*avgStepOut));
 
         List<ServerPair> possibleESBOut = new ArrayList<>();
         for(int i = 0; i < sortedOutgoing.size() - 1; i++){
@@ -94,12 +95,15 @@ public class ESBService {
 
         for(ServerPair pairOut : possibleESBOut){
             for(ServerPair pairIn : possibleESBIn){
-                if(pairIn.getPath().equals(pairOut.getPath())){  //#connection เข้าออกเท่านั้น
+                if(pairIn.getPath().equals(pairOut.getPath())){  //possibleESB เข้า/ออกคือ microservice เดียวกัน (#connection เข้าออกเท่ากัน)
                     esbContext.getCandidateESBs().add(new MicroserviceContext(pairIn.getPath()));   //add ชื่อ module ที่อาจจะเป็น ESB ไปใน list
                 }
             }
         }
 
+//        log.info("sortedIncoming: " +sortedIncoming);
+//        log.info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+//        log.info("sortedOutgoing: " +sortedOutgoing);
 
         /**
          * DaoNotes: get number of microservice in systems
@@ -115,7 +119,7 @@ public class ESBService {
         }
 
         esbContext.setRatioOfESBMicroservices(ratioOfESBMicroservices);
-        log.info("****** ESB ******");
+        log.info("****** ESB Usage******");
         log.info("totalNumberOfMicroserviceInSystems: "+totalNumberOfMicroserviceInSystems);
         log.info("totalNumberOfCandidateESBs: "+totalNumberOfCandidateESBs);
         log.info("ratioOfESBMicroservices: "+ratioOfESBMicroservices);

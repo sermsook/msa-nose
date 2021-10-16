@@ -73,13 +73,16 @@ public class GreedyService {
                 .sorted(Comparator.comparing(EntityPair::getEntityCount))
                 .collect(Collectors.toList());
 
-        for (EntityPair eachService: sorted) {
-            log.info("service name: " + eachService.getPath() + ", entity class count: " + eachService.getEntityCount());
-        }
-        log.info("---------------------------------------------------------------------------------------------------------");
-        for (EntityPair eachService: trimmed) {
-            log.info("service name: " + eachService.getPath() + ", entity class count: " + eachService.getEntityCount());
-        }
+        /**
+         * ADD LOG FOR TEST
+         */
+//        for (EntityPair eachService: sorted) {
+//            log.info("service name: " + eachService.getPath() + ", entity class count: " + eachService.getEntityCount());
+//        }
+//        log.info("---------------------------------------------------------------------------------------------------------");
+//        for (EntityPair eachService: trimmed) {
+//            log.info("service name: " + eachService.getPath() + ", entity class count: " + eachService.getEntityCount());
+//        }
 
         double avgEntityCount = 0;
         for (EntityPair pair : trimmed) {
@@ -87,7 +90,7 @@ public class GreedyService {
         }
 
         avgEntityCount = avgEntityCount / trimmed.size();  //#entity ทั้งหมดทุกservice/#microservice            [#microservice =   #jar ที่มี entity > 1]
-        log.info("avgEntityCount: "+avgEntityCount);
+//        log.info("avgEntityCount: "+avgEntityCount);
 
         double numerator = 0.0;
         for (EntityPair pair : trimmed) {
@@ -95,7 +98,7 @@ public class GreedyService {
         }
 
         double std = Math.sqrt(numerator / (trimmed.size() - 1));   //std = sqrt(numerator/(#jar ที่มี entity > 1 - 1))
-        log.info("std is " +std+ "---> 2sd is " + 2*std);
+//        log.info("std is " +std+ "---> 2sd is " + 2*std);
 
         List<EntityPair> possibleNanoMicroservices = new ArrayList<>();
         for(EntityPair pair : sorted){
