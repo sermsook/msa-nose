@@ -36,14 +36,26 @@ import lombok.Data;
         double appropriateServiceRelationship = derivedMetric.getRatioOfAppropriateDatabaseAccess();
         double manageableConnections = derivedMetric.getRatioOfManageableConnections();
         double resolvedEndpoints = derivedMetric.getRatioOfResolvedEndpoints();
+        boolean hasApiGateway = context.getAPIGatewayContext().hasApiGateway();
 
-        this.understandability = 0.3*versionedAPIs + 0.15*manageableStandards + 0.35*acyclicCalls + 0.2*nonESBMicroservices;
-        this.modularity = 0.25*acyclicCalls + 0.08*separateLibraries + 0.3*rightCuts + 0.04*coarseGrainedMicroservices + 0.2*separatePersistency + 0.13*appropriateServiceRelationship;
-        this.modifiability = 0.25*versionedAPIs + 0.3*acyclicCalls + 0.08*separateLibraries+ 0.04*coarseGrainedMicroservices + 0.2*nonESBMicroservices + 0.13*manageableConnections;
-        this.reusability = 0.5*acyclicCalls + 0.2*coarseGrainedMicroservices + 0.3*nonESBMicroservices;
-        this.scalability = 0.5*rightCuts + 0.5*resolvedEndpoints;
-        this.confidentiality = 0.6*separatePersistency + 0.4*appropriateServiceRelationship;
-        this.faultTolerance = 0.45*separatePersistency + 0.2*appropriateServiceRelationship + 0.35*nonESBMicroservices;
+        this.understandability = 0.203*rightCuts + 0.177*acyclicCalls + 0.165*versionedAPIs + 0.152*nonESBMicroservices + 0.127*manageableConnections +
+                0.101*manageableStandards + 0.076*coarseGrainedMicroservices;
+        this.modularity = 0.239*rightCuts + 0.209*acyclicCalls + 0.194*separatePersistency + 0.149*appropriateServiceRelationship +
+                0.119*separateLibraries + 0.090*coarseGrainedMicroservices;
+        this.modifiability =  0.127*rightCuts + 0.127*resolvedEndpoints + 0.111*acyclicCalls + 0.103*separatePersistency +0.103*versionedAPIs +
+                0.095*nonESBMicroservices + 0.079*manageableConnections + 0.079*appropriateServiceRelationship + 0.063*separateLibraries +
+                0.063*manageableStandards+ 0.048*coarseGrainedMicroservices;
+        this.reusability = 0.333*rightCuts + 0.292*acyclicCalls + 0.250*nonESBMicroservices + 0.125*coarseGrainedMicroservices;
+        this.scalability = 0.250*rightCuts + 0.250*resolvedEndpoints + 0.219*acyclicCalls + 0.188*nonESBMicroservices + 0.094*coarseGrainedMicroservices;
+        this.confidentiality = 0.565*separatePersistency + 0.435*appropriateServiceRelationship;
+        if (hasApiGateway) {
+            this.faultTolerance =  0.298*acyclicCalls + 0.277*separatePersistency + 0.255*nonESBMicroservices + 0.213*appropriateServiceRelationship +
+                    0.170*separateLibraries - 0.213*manageableConnections;
+        }else {
+            this.faultTolerance =  0.246*acyclicCalls + 0.228*separatePersistency + 0.211*nonESBMicroservices + 0.175*appropriateServiceRelationship +
+                    0.140*separateLibraries;
+        }
+
         return context;
     }
 }

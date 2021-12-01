@@ -51,16 +51,6 @@ public class CyclicDependencyService {
         context.setTotalServiceCall(totalServiceCalls);
 
         for (Integer c: children) {
-//            //Dao's logic for store existing service call
-//            if (visited[i]) {
-//                Pair visitedFlow = new Pair<>(i, c);
-//                if (!context.getPairs().contains(visitedFlow)) {
-//                    context.addPair(visitedFlow);
-//                }else {
-//                    continue;
-//                }
-//            }
-
             if (isCyclicUtil(c, visited, recStack, context)) {
                 totalCyclicCalls++;
                 context.setTotalCyclicCall(totalCyclicCalls);
@@ -118,26 +108,6 @@ public class CyclicDependencyService {
             adjList.add(new LinkedList<>());
         }
 
-        /**
-         * RestFlow = {
-         *  resourcePath=/Users/sermsook.pul/Documents/Me/Master-Project/MSANose/ex-microservice/train-ticket/ts-admin-user-service/target/ts-admin-user-service-1.0.jar,
-         *  className=adminuser.service.AdminUserServiceImpl,
-         *  methodName=getAllUsers,
-         *  servers=[
-         *      RestEntity= {
-         *          isClient=false,
-         *          url=/api/v1/userservice/users,
-         *          applicationName=null,
-         *          ribbonServerName=null,
-         *          resourcePath=/Users/sermsook.pul/Documents/Me/Master-Project/MSANose/ex-microservice/train-ticket/ts-user-service/target/ts-user-service-1.0.jar,
-         *          className=user.controller.UserController,
-         *          methodName=getAllUser, returnType=org.springframework.http.ResponseEntity,
-         *          path=/api/v1/userservice/users, httpMethod=GET, pathParams=null, queryParams=null, consumeType=null,
-         *          produceType=null
-         *      }
-         *   ]
-         * }
-         */
         for(RestFlow flow : responseContext.getRestFlowContext().getRestFlows()){  //RestFlows= [A->B->C, C->D, E->F] , flow = each call chain eg. A->B->C
             int keyA = vertexMap.get(flow.getResourcePath()); //eg. keyA = index ของ /train-ticket/ts-admin-user-service/target/ts-admin-user-service-1.0.jar             //flow.getResourcePath() = client.ResourcePath()
 

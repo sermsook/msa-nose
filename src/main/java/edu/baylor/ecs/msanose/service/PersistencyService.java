@@ -81,7 +81,7 @@ public class PersistencyService {
         context.setSharedPersistencies(sharedPersistencies);
         //Calculate base metrics
         int n = databases.size();
-        log.info("databases: " + databases);
+//        log.info("databases: " + databases);
         log.info("numberOfMicroserviceAndDBPair: " + n);
         double totalNumberOfPairOfMicroservice = ((n * (n+1))/2) - n; //Not count duplicate (A,B) (B,A) and compare with themselve (A,A)
         double totalNumberOfMicroserviceWithSharedDB = context.getSharedPersistencies().size();  //Eg. [microA, microB, microC] --> PairOfShared = 3

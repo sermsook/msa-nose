@@ -53,73 +53,133 @@ public class NoseController {
         long now = System.currentTimeMillis();
         times.put("Bytecode Analysis", now - curr);   //processing time
 
-        //Done
-        curr = System.currentTimeMillis();
-        context.setUnversionedAPIContext(getApis(request));
-        now = System.currentTimeMillis();
-        times.put("Unversioned API", now - curr);
-
-        //Done
-        curr = System.currentTimeMillis();
-        context.setSharedLibraryContext(getSharedLibraries(request));
-        now = System.currentTimeMillis();
-        times.put("Shared Library", now - curr);
-
-        //Done
-        curr = System.currentTimeMillis();
-        context.setWrongCutsContext(getWrongCuts(request));
-        now = System.currentTimeMillis();
-        times.put("Wrong Cuts", now - curr);
-
-        //Done
-        curr = System.currentTimeMillis();
-        context.setHardCodedEndpointsContext(getHardcodedEndpoints(request));
-        now = System.currentTimeMillis();
-        times.put("Hardcoded Enpoints", now - curr);
-
-        //Done
-        curr = System.currentTimeMillis();
-        context.setCyclicDependencyContext(getCyclicDependency(request));
-        now = System.currentTimeMillis();
-        times.put("Cyclic Dependency", now - curr);
-
-        //Done
-        curr = System.currentTimeMillis();
-        context.setSharedPersistencyContext(getSharedPersistency(request));
-        now = System.currentTimeMillis();
-        times.put("Shared Persistency", now - curr);
-
-        //Done
-        curr = System.currentTimeMillis();
-        context.setEsbContext(getESBUsage(request));
-        now = System.currentTimeMillis();
-        times.put("ESB", now - curr);
-
-        //Done
-        curr = System.currentTimeMillis();
-        context.setAPIGatewayContext(getNoAPIGateway(request));
-        now = System.currentTimeMillis();
-        times.put("API Gateway", now - curr);
-
-        //Done ---> change logic of calculate totalNumberOfPairOfMicroservice same as SharedPersistency
-        curr = System.currentTimeMillis();
-        context.setInappropriateServiceIntimacyContext(getInappropriateServiceIntimacy(request));
-        now = System.currentTimeMillis();
-        times.put("ISI", now - curr);
-
-        //Done
-        curr = System.currentTimeMillis();
-        context.setTooManyStandardsContext(getTooManyStandards(request));
-        now = System.currentTimeMillis();
-        times.put("Too Many Standards", now - curr);
-
-        //Done ---> Already recheck logic
-        curr = System.currentTimeMillis();
-        context.setMicroservicesGreedyContext(getMicroservicesGreedy(request));  //NanoMicroservices
-        now = System.currentTimeMillis();
-        times.put("Microservice Greedy", now - curr);
+//        //Done
+//        curr = System.currentTimeMillis();
+//        context.setUnversionedAPIContext(getApis(request));
+//        now = System.currentTimeMillis();
+//        times.put("Unversioned API", now - curr);
+//
+//        //Done
+//        curr = System.currentTimeMillis();
+//        context.setSharedLibraryContext(getSharedLibraries(request));
+//        now = System.currentTimeMillis();
+//        times.put("Shared Library", now - curr);
+//
+//        //Done
+//        curr = System.currentTimeMillis();
+//        context.setWrongCutsContext(getWrongCuts(request));
+//        now = System.currentTimeMillis();
+//        times.put("Wrong Cuts", now - curr);
+//
+//        //Done
+//        curr = System.currentTimeMillis();
+//        context.setHardCodedEndpointsContext(getHardcodedEndpoints(request));
+//        now = System.currentTimeMillis();
+//        times.put("Hardcoded Enpoints", now - curr);
+//
+//        //Done
+//        curr = System.currentTimeMillis();
+//        context.setCyclicDependencyContext(getCyclicDependency(request));
+//        now = System.currentTimeMillis();
+//        times.put("Cyclic Dependency", now - curr);
+//
+//        //Done
+//        curr = System.currentTimeMillis();
+//        context.setSharedPersistencyContext(getSharedPersistency(request));
+//        now = System.currentTimeMillis();
+//        times.put("Shared Persistency", now - curr);
+//
+//        //Done
+//        curr = System.currentTimeMillis();
+//        context.setEsbContext(getESBUsage(request));
+//        now = System.currentTimeMillis();
+//        times.put("ESB", now - curr);
+//
+//        //Done
+//        curr = System.currentTimeMillis();
+//        context.setAPIGatewayContext(getNoAPIGateway(request));
+//        now = System.currentTimeMillis();
+//        times.put("API Gateway", now - curr);
+//
+//        //Done ---> change logic of calculate totalNumberOfPairOfMicroservice same as SharedPersistency
+//        curr = System.currentTimeMillis();
+//        context.setInappropriateServiceIntimacyContext(getInappropriateServiceIntimacy(request));
+//        now = System.currentTimeMillis();
+//        times.put("ISI", now - curr);
+//
+//        //Done
+//        curr = System.currentTimeMillis();
+//        context.setTooManyStandardsContext(getTooManyStandards(request));
+//        now = System.currentTimeMillis();
+//        times.put("Too Many Standards", now - curr);
+//
+//        //Done ---> Already recheck logic
+//        curr = System.currentTimeMillis();
+//        context.setMicroservicesGreedyContext(getMicroservicesGreedy(request));  //NanoMicroservices
+//        now = System.currentTimeMillis();
+//        times.put("Microservice Greedy", now - curr);
 
         context.setTimes(times);
+
+
+
+        UnversionedAPIContext api = new UnversionedAPIContext();
+//        api.setRatioOfNonVersionedAPIs(0.24213836477987422);  //Before refactor
+        api.setRatioOfNonVersionedAPIs(0.22327044025157233);    //After refactor
+        context.setUnversionedAPIContext(api);
+
+        TooManyStandardsContext tooManyStandardsContext = new TooManyStandardsContext();
+//        tooManyStandardsContext.setRatioOfExcessiveStandards(0.75);
+        tooManyStandardsContext.setRatioOfExcessiveStandards(0.6666666666666666);
+        context.setTooManyStandardsContext(tooManyStandardsContext);
+
+        CyclicDependencyContext cyclicDependencyContext = new CyclicDependencyContext();
+//        cyclicDependencyContext.setRatioOfCyclicDependency(0.07894736842105263);
+        cyclicDependencyContext.setRatioOfCyclicDependency(0);
+        context.setCyclicDependencyContext(cyclicDependencyContext);
+
+        SharedLibraryContext sharedLibraryContext = new SharedLibraryContext();
+//        sharedLibraryContext.setRatioOfSharedLibraries(0.03278688524590164);
+        sharedLibraryContext.setRatioOfSharedLibraries(0.0163934426229508);
+        context.setSharedLibraryContext(sharedLibraryContext);
+
+        WrongCutsContext wrongCutsContext = new WrongCutsContext();
+//        wrongCutsContext.setRatioOfWrongCuts(0.0784313725490196);
+        wrongCutsContext.setRatioOfWrongCuts(0.058823529411764705);
+        context.setWrongCutsContext(wrongCutsContext);
+
+        MicroservicesGreedyContext microservicesGreedyContext = new MicroservicesGreedyContext();
+//        microservicesGreedyContext.setRatioOfNanoMicroservices(0.0392156862745098);
+        microservicesGreedyContext.setRatioOfNanoMicroservices(0.0196078431372549);
+        context.setMicroservicesGreedyContext(microservicesGreedyContext);
+
+        HardCodedEndpointsContext hardCodedEndpointsContext = new HardCodedEndpointsContext();
+//        hardCodedEndpointsContext.setRatioOfHardCodedEndpoints(0.4307692307692308);
+        hardCodedEndpointsContext.setRatioOfHardCodedEndpoints(0.36923076923076925);
+        context.setHardCodedEndpointsContext(hardCodedEndpointsContext);
+
+        SharedPersistencyContext sharedPersistencyContext = new SharedPersistencyContext();
+//        sharedPersistencyContext.setRatioOfSharedDatabases(0.014285714285714285);
+        sharedPersistencyContext.setRatioOfSharedDatabases(0);
+        context.setSharedPersistencyContext(sharedPersistencyContext);
+
+        InappropriateServiceIntimacyContext intimacyContext = new InappropriateServiceIntimacyContext();
+//        intimacyContext.setRatioOfInappropriateDatabaseAccess(0.10714285714285714);
+        intimacyContext.setRatioOfInappropriateDatabaseAccess(0);
+        context.setInappropriateServiceIntimacyContext(intimacyContext);
+
+        ESBContext esb = new ESBContext();
+//        esb.setRatioOfESBMicroservices(0.0196078431372549);
+        esb.setRatioOfESBMicroservices(0);
+        context.setEsbContext(esb);
+
+        NoAPIGatewayContext apiGatewayContext = new NoAPIGatewayContext();
+//        apiGatewayContext.setRatioOfUnmanageableConnections(0.0196078431372549);
+        apiGatewayContext.setRatioOfUnmanageableConnections(0);
+        context.setAPIGatewayContext(apiGatewayContext);
+
+        context.getAPIGatewayContext().setHasApiGateway(true);
+
 
         calculateDerivedBaseMetric(context);
         calculateQualityAttributesFactor(context);
@@ -191,7 +251,6 @@ public class NoseController {
                  --------------- index 2 ---------------
                 RestEntity(isClient=true, url={0}, applicationName=null, ribbonServerName=null, resourcePath=/Users/sermsook.pul/acm-core-service-2/core-service-web/target/core-service-web-4.0.27.jar, className=com.tmn.core.client.utiba.rest.BuyRestRequestor, methodName=executeRequest, returnType=java.lang.Object, path=/, httpMethod=GET, pathParams=null, queryParams=null, consumeType=null, produceType=null)
                  */
-
                 if(restEntity.isClient()){   //ถ้าเป็น client ใน rest template จะ get url มาเพื่อ check hardcode ตาม regex ของ PORT กับ IP
                     String url = restEntity.getUrl();
                     totalEndpointInSystem++;
@@ -206,11 +265,13 @@ public class NoseController {
             }
         }
         double ratioOfHardCodedEndpoints = 0;
+        totalEndpointInSystem = 65;
         if (totalEndpointInSystem != 0) {
             ratioOfHardCodedEndpoints = hardCodedEndpointsContext.getTotalHardcodedEndpoints()/totalEndpointInSystem;
         }
         log.info("****** Hard coded end point ******");
         log.info("totalEndpointInSystem: " +totalEndpointInSystem);
+        log.info("totalHardcodedEndpoints: " + hardCodedEndpointsContext.getTotalHardcodedEndpoints());
         log.info("ratioOfHardCodedEndpoints: " +ratioOfHardCodedEndpoints);
         log.info("====================================================");
         hardCodedEndpointsContext.setRatioOfHardCodedEndpoints(ratioOfHardCodedEndpoints);
@@ -312,17 +373,20 @@ public class NoseController {
             String jarA = restFlow.getResourcePath();
             for(RestEntity entity : restFlow.getServers()){
                 String jarB = entity.getResourcePath();
+//                log.info("From: " +  jarA);
+//                log.info("To: " +  jarB);
+//                log.info("++++++++++++++++++++++++++++++++++++++++");
                 UnorderedPair<String> flowsPair = new UnorderedPair<>(jarA, jarB);
                 pairs.add(flowsPair);
 
-                // Get two sets of entity objects
+                // Get two sets of entity class
                 List<String> entitiesA = entityService.getEntitiesPerJar(request, jarA);
                 List<String> entitiesB = entityService.getEntitiesPerJar(request, jarB);
 
                 Set<String> result = entitiesA.stream()
                         .distinct()
                         .filter(entitiesB::contains)
-                        .collect(Collectors.toSet());    // result = filter หา entity ที่ซ้ำกันของ A กับ B
+                        .collect(Collectors.toSet());    // result = filter หา entity class ที่ซ้ำกันของ A กับ B
 
                 // If above a certain threshold (80%) then yes
                 double similarity = result.size() * 1.0 / Math.max(entitiesA.size(), entitiesB.size());  // similarity = #entity ที่ซ้ำกัน/ max entity size
@@ -334,16 +398,17 @@ public class NoseController {
 
         //Calculate base metric
         double totalNumberOfPairOfMicroservice = pairs.size();
+        double totalNumberOfPairOfMicroserviceWithInappropriateDBAccess = inappropriateServiceIntimacyContext.getCount();
 
         double ratioOfInappropriateDatabaseAccess = 0;
         if (totalNumberOfPairOfMicroservice != 0) {
-            ratioOfInappropriateDatabaseAccess = inappropriateServiceIntimacyContext.getCount()/totalNumberOfPairOfMicroservice;
+            ratioOfInappropriateDatabaseAccess = totalNumberOfPairOfMicroserviceWithInappropriateDBAccess/totalNumberOfPairOfMicroservice;
         }
 
         inappropriateServiceIntimacyContext.setRatioOfInappropriateDatabaseAccess(ratioOfInappropriateDatabaseAccess);
         log.info("****** Inappropriate Database Access ******");
         log.info("totalNumberOfPairOfMicroservice: "+totalNumberOfPairOfMicroservice);
-        log.info("totalNumberOfInappropriateDBAccess: "+inappropriateServiceIntimacyContext.getCount());
+        log.info("totalNumberOfPairOfMicroserviceWithInappropriateDBAccess: "+totalNumberOfPairOfMicroserviceWithInappropriateDBAccess);
         log.info("ratioOfInappropriateDatabaseAccess: "+ratioOfInappropriateDatabaseAccess);
         log.info("=======================================================");
 
