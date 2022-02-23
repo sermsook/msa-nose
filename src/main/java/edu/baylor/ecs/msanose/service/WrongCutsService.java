@@ -24,16 +24,11 @@ public class WrongCutsService {
         WrongCutsContext wrongCutsContext = new WrongCutsContext();
         Map<String, Integer> counts = new HashMap<>();
 
-        List<String> jars = resourceService.getResourcePaths(request.getPathToCompiledMicroservices()); //ได้list path ของ JAR or WAR file in the project directory
+        List<String> jars = resourceService.getResourcePaths(request.getPathToCompiledMicroservices());
 
         for(String jar : jars){
-            List<String> entities = entityService.getEntitiesPerJar(request, jar); //หา entity class name ทั้งหมดใน jar โดยดูจาก annotation @Entity หรือ @Document
-
-            /*
-            entities = [TmnProfileData, TmnProfile, TmnAddressPK, TmnAddress, LogableHeaderMataInfo, TmnProfileDataPK, TmnDocumentPK, TmnDocument]
-             */
-
-            counts.put(extractName(jar), entities.size());  //extract ชื่อ jar file ; counts = list(jarName, #entity)
+            List<String> entities = entityService.getEntitiesPerJar(request, jar);
+            counts.put(extractName(jar), entities.size());
         }
 
         List<EntityPair> sorted = counts.entrySet()
@@ -44,7 +39,7 @@ public class WrongCutsService {
 
         List<EntityPair> trimmed = sorted
                 .stream()
-                .filter(x -> x.getEntityCount() > 1)  //filter เอาอันที่ entity > 1
+                .filter(x -> x.getEntityCount() > 1)
                 .sorted(Comparator.comparing(EntityPair::getEntityCount))
                 .collect(Collectors.toList());
 
@@ -52,29 +47,20 @@ public class WrongCutsService {
         for (EntityPair pair : trimmed) {
             avgEntityCount += pair.getEntityCount();
         }
-        avgEntityCount = avgEntityCount / trimmed.size();  //#entity ทั้งหมด/#jar ที่มี entity > 1
+        avgEntityCount = avgEntityCount / trimmed.size();
 
         double numerator = 0.0;
         for (EntityPair pair : trimmed) {
-            numerator += Math.pow(pair.getEntityCount() - avgEntityCount, 2);  //numerator = sum(#entityต่อ1jar - avgEntityCount)^2
+            numerator += Math.pow(pair.getEntityCount() - avgEntityCount, 2);
         }
 
-        double std = Math.sqrt(numerator / (trimmed.size() - 1));   //std = sqrt(numerator/(#jar ที่มี entity > 1 - 1))
-//        log.info("std is " +std+ "---> 2sd is " + 2*std);
+        double std = Math.sqrt(numerator / (trimmed.size() - 1));
 
         List<EntityPair> possibleWrongCuts = new ArrayList<>();
         for(EntityPair pair : sorted){
-
-//            if(pair.getEntityCount() == 0){
-//                possibleWrongCuts.add(pair);
-//            }
-
-//            double d = Math.max(avgEntityCount, pair.getEntityCount()) - Math.min(avgEntityCount, pair.getEntityCount());  //d = max(avgEntityCount, #entityofEachMicroservice) - min(avgEntityCount, #entityofEachMicroservice)      #entity มากสุด - #entity น้อยสุด
             double d = pair.getEntityCount() - avgEntityCount;
-            if(d > (2 * std) || d < -(2 * std)){   //ถ้า d > 2sd ก็มีความเป็นไปได้ที่จะเป็น WrongCuts
+            if(d > (2 * std) || d < -(2 * std)){
                 possibleWrongCuts.add(pair);
-//                log.info(pair.getPath());
-//                log.info("d = " + d);
             }
         }
 
@@ -89,11 +75,6 @@ public class WrongCutsService {
             ratioOfWrongCuts = totalNumberOfPossibleWrongCuts/totalNumberOfMicroserviceInSystems;
         }
         wrongCutsContext.setRatioOfWrongCuts(ratioOfWrongCuts);
-        log.info("****** Wrong Cuts ******");
-        log.info("totalNumberOfMicroserviceInSystems: "+totalNumberOfMicroserviceInSystems);
-        log.info("totalNumberOfPossibleWrongCuts: "+totalNumberOfPossibleWrongCuts);
-        log.info("ratioOfWrongCuts: "+ratioOfWrongCuts);
-        log.info("=======================================================");
 
         return wrongCutsContext;
     }

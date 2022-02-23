@@ -23,7 +23,7 @@ public class NoAPIGatewayService {
         AnalysisContext analysisContext = JParserService.createContextFromPath(request.getPathToCompiledMicroservices());
         List<ClassComponent> classes = analysisContext.getClasses();
         classes.forEach(clazz -> {
-            List<AnnotationComponent> annotationComponents = clazz.getAnnotations().stream().map(Component::asAnnotationComponent).collect(Collectors.toList());  //DaoNote: return list of all @Component annotaion
+            List<AnnotationComponent> annotationComponents = clazz.getAnnotations().stream().map(Component::asAnnotationComponent).collect(Collectors.toList());
             for(AnnotationComponent annotationComponent : annotationComponents) {
                 String annotation = annotationComponent.getAsString();
                 if (annotation.matches("@EnableZuulProxy")) {

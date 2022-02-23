@@ -1,15 +1,11 @@
 package edu.baylor.ecs.msanose.service;
 
-import edu.baylor.ecs.msanose.model.Pair;
 import edu.baylor.ecs.msanose.model.context.CyclicDependencyContext;
 import edu.baylor.ecs.rad.context.RequestContext;
 import edu.baylor.ecs.rad.context.ResponseContext;
 import edu.baylor.ecs.rad.context.RestEntityContext;
-import edu.baylor.ecs.rad.context.RestFlowContext;
 import edu.baylor.ecs.rad.model.RestEntity;
 import edu.baylor.ecs.rad.model.RestFlow;
-import edu.baylor.ecs.rad.service.RestDiscoveryService;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -81,7 +77,6 @@ public class CyclicDependencyService {
         // detect cycle in different DFS trees
         for (int i = 0; i < V; i++) {
             if (isCyclicUtil(i, visited, recStack, context)) {
-                log.info("There are cyclic dependency.");
                 continue;
             }
         }
@@ -90,37 +85,33 @@ public class CyclicDependencyService {
     }
 
     public CyclicDependencyContext getCyclicDependencies(RequestContext request){
-        ResponseContext responseContext = restDiscoveryService.generateResponseContext(request); //หา RestEntity ทั้งหมดของทุก rest client ของทุก jar file โดยดูจาก annotaion, พยายามปั้น full url ของ rest client ขึ้นมา
+        ResponseContext responseContext = restDiscoveryService.generateResponseContext(request);
 
         // Map all entities to indexes
-        int ndx = 0;  //Dao's note: ndx is number of microservices in system
+        int ndx = 0;
         for(RestEntityContext entity : responseContext.getRestEntityContexts()){
-            //Dao's note: vertexMap is <path of microservice, index>
-            vertexMap.put(entity.getResourcePath(), ndx);   //<node, index>
+            vertexMap.put(entity.getResourcePath(), ndx);
             ndx++;
         }
-//        log.info("All microservice in system: " +vertexMap);
+
         // Construct edges in adjacency list
         V = responseContext.getRestEntityContexts().size();
         adjList = new LinkedList<>();
 
-        for(int i = 0; i < V; i++){  //สร้าง adjacency list ขนาดเท่ากับ #RestEntity ทั้งหมด ทุก jar file
+        for(int i = 0; i < V; i++){
             adjList.add(new LinkedList<>());
         }
 
-        for(RestFlow flow : responseContext.getRestFlowContext().getRestFlows()){  //RestFlows= [A->B->C, C->D, E->F] , flow = each call chain eg. A->B->C
-            int keyA = vertexMap.get(flow.getResourcePath()); //eg. keyA = index ของ /train-ticket/ts-admin-user-service/target/ts-admin-user-service-1.0.jar             //flow.getResourcePath() = client.ResourcePath()
+        for(RestFlow flow : responseContext.getRestFlowContext().getRestFlows()){
+            int keyA = vertexMap.get(flow.getResourcePath());
 
             for(RestEntity server : flow.getServers()){
                 int keyB = vertexMap.get(server.getResourcePath());
-                adjList.get(keyA).add(keyB);   //สร้าง graph ว่า a call ไปหา b  (index ของ b)
-                log.info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-                log.info("index: " + keyA + ", start node: " + flow.getResourcePath());
-                log.info("index: " + keyB + ", end node: "+server.getResourcePath());
+                adjList.get(keyA).add(keyB);
             }
         }
 
-        CyclicDependencyContext context = isCyclic();  //เอา adjList ไป  check ว่ามี Cyclic ไหม
+        CyclicDependencyContext context = isCyclic();
         double totalNumberOfServiceCall = context.getTotalServiceCall();
         double ratioOfCyclicDependency = 0.0;
         if(totalNumberOfServiceCall != 0) {
@@ -128,11 +119,6 @@ public class CyclicDependencyService {
         }
 
         context.setRatioOfCyclicDependency(ratioOfCyclicDependency);
-        log.info("****** Cyclic Dependency ******");
-        log.info("totalNumberOfServiceCall: " +totalNumberOfServiceCall);
-        log.info("totalNumberOfCyclicServiceCall: " +context.getTotalCyclicCall());
-        log.info("ratioOfCyclicDependency: " +ratioOfCyclicDependency);
-        log.info("====================================================");
         return context;
     }
 }

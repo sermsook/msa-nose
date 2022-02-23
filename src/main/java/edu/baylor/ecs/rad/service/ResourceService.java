@@ -77,35 +77,13 @@ public class ResourceService {
                                         !String.valueOf(path).toLowerCase().contains("/gradle") &&
                                         !String.valueOf(path).toLowerCase().contains("\\.mvn\\") &&
                                         !String.valueOf(path).toLowerCase().contains("\\target\\dependency") &&
-//                                        !String.valueOf(path).toLowerCase().contains("document");
+                                        !String.valueOf(path).toLowerCase().contains("document") &&
                                         !String.valueOf(path).toLowerCase().contains("\\gradle");
                             });
 
             fileNames = stream
                     .map(String::valueOf)
                     .collect(Collectors.toList());
-//            log.info("All microservice jar/war file names: " + fileNames);
-
-//            Stream<Path> stream = Files.find(start, maxDepth,
-//                    (path, attr) ->
-//                            String.valueOf(path).toLowerCase().endsWith(".jar") ||
-//                                    String.valueOf(path).toLowerCase().endsWith(".war"));
-//            fileNames = stream
-//                    .sorted()
-//                    .map(String::valueOf)
-//                    .filter((path) -> {
-//                        return (String.valueOf(path).toLowerCase().endsWith(".jar") ||
-//                                String.valueOf(path).toLowerCase().endsWith(".war")) &&
-//                                !String.valueOf(path).toLowerCase().contains("/.mvn/") &&
-//                                !String.valueOf(path).toLowerCase().startsWith("/usr/lib/jvm/") &&
-//                                !String.valueOf(path).toLowerCase().contains("/target/dependency/") &&
-//                                !String.valueOf(path).toLowerCase().contains("/gradle") &&
-//                                !String.valueOf(path).toLowerCase().contains("\\.mvn\\") &&
-//                                !String.valueOf(path).toLowerCase().contains("\\target\\dependency") &&
-//                                !String.valueOf(path).toLowerCase().contains("document") &&
-//                                !String.valueOf(path).toLowerCase().contains("\\gradle");
-//                    })
-//                    .collect(Collectors.toList());
         } catch(Exception e){
             e.printStackTrace();
         }
@@ -191,8 +169,8 @@ public class ResourceService {
         try (JarFile jar = new JarFile(path.toFile())) {
             List<JarEntry> entries = Collections.list(jar.entries());
             for (JarEntry je: entries) {
-                if (isPropertiesFile(je)){  //หา properties file จากทุก file ที่เป็น .properties
-                    if (je.getName().contains("application")) { //get properties ทั้งหมดจาก application.properties
+                if (isPropertiesFile(je)){
+                    if (je.getName().contains("application")) {
                         Properties prop = getPropertiesFileFromJar(jar, je);
                         if (prop != null) {
                             properties.add(prop);
@@ -218,7 +196,7 @@ public class ResourceService {
             List<JarEntry> entries = Collections.list(jar.entries());
             for (JarEntry je: entries) {
                 if (isYamlFile(je)){
-                    if (je.getName().contains("application")) {    //file ที่เป็น application.yml
+                    if (je.getName().contains("application")) {
                         try (InputStream in = jar.getInputStream(je)) {
                             try (DataInputStream data = new DataInputStream(in)) {
                                 Yaml yaml = new Yaml();

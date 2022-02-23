@@ -25,40 +25,11 @@ public class GreedyService {
         MicroservicesGreedyContext microservicesGreedyContext = new MicroservicesGreedyContext();
         Map<String, Integer> counts = new HashMap<>();
 
-        List<String> jars = resourceService.getResourcePaths(request.getPathToCompiledMicroservices()); //ได้list path ของ JAR or WAR file in the project directory
-        /**
-         * Old Code
-         */
-//        File directory = new File(request.getPathToCompiledMicroservices());     //ex.   /Users/sermsook.pul/acm-core-service-2
-//
-//        // Get all sub-directories from a directory.
-//        File[] fList = directory.listFiles();
-//        List<String> subdirectories = new ArrayList<>();
-//        if(fList != null) {
-//            for (File file : fList) {
-//                if (file.isDirectory()) {
-//                    subdirectories.add(file.getAbsolutePath());
-//                }
-//            }
-//        }
-//
-//        // For each, get entity counts and static file counts
-//        for(String dir : subdirectories){   //DaoNotes: dir = each module    ex. /Users/sermsook.pul/acm-core-service-2/core-service-web
-//            List<String> entities = entityService.getEntitiesPerFolder(dir);      //all entity class name ex. [TmnProfileData, TmnProfile, TmnAddressPK, TmnAddress, LogableHeaderMataInfo, TmnProfileDataPK, TmnDocumentPK, TmnDocument]
-//            List<File> staticFiles = new ArrayList<>();
-//            getStaticFiles(dir, staticFiles);  //DaoNotes: get all front-end file
-//            microservicesGreedyContext.addMetric(new MicroserviceMetric(dir, staticFiles.size(), entities.size()));
-//            // System.out.println(dir + " - " + entities.size() + " " + staticFiles.size());
-//
-//            counts.put(dir, entities.size());
-//        }
+        List<String> jars = resourceService.getResourcePaths(request.getPathToCompiledMicroservices());
 
-        /**
-         * DaoNotes: Add logic to find outliers (2sd)
-         */
         for(String jar : jars){
-            List<String> entities = entityService.getEntitiesPerJar(request, jar); //หา entity class name ทั้งหมดใน jar โดยดูจาก annotation @Entity หรือ @Document
-            counts.put(extractName(jar), entities.size());  //extract ชื่อ jar file ; counts = list(jarName, #entity class)
+            List<String> entities = entityService.getEntitiesPerJar(request, jar);
+            counts.put(extractName(jar), entities.size());
         }
 
         List<EntityPair> sorted = counts.entrySet()
@@ -69,52 +40,35 @@ public class GreedyService {
 
         List<EntityPair> trimmed = sorted
                 .stream()
-                .filter(x -> x.getEntityCount() > 1)  //filter เอาอันที่ entity > 1
+                .filter(x -> x.getEntityCount() > 1)
                 .sorted(Comparator.comparing(EntityPair::getEntityCount))
                 .collect(Collectors.toList());
-
-        /**
-         * ADD LOG FOR TEST
-         */
-//        for (EntityPair eachService: sorted) {
-//            log.info("service name: " + eachService.getPath() + ", entity class count: " + eachService.getEntityCount());
-//        }
-//        log.info("---------------------------------------------------------------------------------------------------------");
-//        for (EntityPair eachService: trimmed) {
-//            log.info("service name: " + eachService.getPath() + ", entity class count: " + eachService.getEntityCount());
-//        }
 
         double avgEntityCount = 0;
         for (EntityPair pair : trimmed) {
             avgEntityCount += pair.getEntityCount();
         }
 
-        avgEntityCount = avgEntityCount / trimmed.size();  //#entity ทั้งหมดทุกservice/#microservice            [#microservice =   #jar ที่มี entity > 1]
-//        log.info("avgEntityCount: "+avgEntityCount);
+        avgEntityCount = avgEntityCount / trimmed.size();
 
         double numerator = 0.0;
         for (EntityPair pair : trimmed) {
-            numerator += Math.pow(pair.getEntityCount() - avgEntityCount, 2);  //numerator = sum(#entityต่อ1jar - avgEntityCount)^2
+            numerator += Math.pow(pair.getEntityCount() - avgEntityCount, 2);
         }
 
-        double std = Math.sqrt(numerator / (trimmed.size() - 1));   //std = sqrt(numerator/(#jar ที่มี entity > 1 - 1))
-//        log.info("std is " +std+ "---> 2sd is " + 2*std);
+        double std = Math.sqrt(numerator / (trimmed.size() - 1));
 
         List<EntityPair> possibleNanoMicroservices = new ArrayList<>();
         for(EntityPair pair : sorted){
             MicroserviceMetric microserviceMetric = new MicroserviceMetric();
             microserviceMetric.setPath(pair.getPath());
             microserviceMetric.setEntityFileCount(pair.getEntityCount());
-//            double d = Math.max(avgEntityCount, pair.getEntityCount()) - Math.min(avgEntityCount, pair.getEntityCount());  //d = #entity มากสุด - #entity น้อยสุด
             double d = pair.getEntityCount() - avgEntityCount;
-//            log.info(pair.getPath());
-//            log.info("d = " + d);
-            if(d < -(2 * std)){   //ถ้า d < -2sd ก็มีความเป็นไปได้ที่จะเป็น Nano Microservice
+
+            if(d < -(2 * std)){
                 microservicesGreedyContext.addGreedyMicroservice(microserviceMetric);
                 possibleNanoMicroservices.add(pair);
-//                log.info("small d = " + d);
             }
-//            log.info("++++++++++++++++++++++++++++++++++++++");
         }
 
         //Calculate base metrics
@@ -126,12 +80,6 @@ public class GreedyService {
         }
 
         microservicesGreedyContext.setRatioOfNanoMicroservices(ratioOfNanoMicroservices);
-        log.info("****** Nano Microservices ******");
-        log.info("totalNumberOfMicroserviceInSystems: "+totalNumberOfMicroserviceInSystems);
-        log.info("totalNumberOfNanoMicroservices: "+totalNumberOfNanoMicroservices);
-        log.info("ratioOfNanoMicroservices: "+ratioOfNanoMicroservices);
-        log.info("=======================================================");
-
         return microservicesGreedyContext;
     }
 

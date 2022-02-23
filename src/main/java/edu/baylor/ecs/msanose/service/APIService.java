@@ -22,10 +22,10 @@ public class APIService {
         AnalysisContext analysisContext = JParserService.createContextFromPath(path);
         List<ClassComponent> classes = analysisContext.getClasses();
         classes.forEach(clazz -> {
-            List<AnnotationComponent> annotationComponents = clazz.getAnnotations().stream().map(Component::asAnnotationComponent).collect(Collectors.toList());  //DaoNote: return list of all @Component annotaion
+            List<AnnotationComponent> annotationComponents = clazz.getAnnotations().stream().map(Component::asAnnotationComponent).collect(Collectors.toList());
             for(AnnotationComponent annotationComponent : annotationComponents) {
                 String annotation = annotationComponent.getAsString();
-                if (annotation.matches("@RequestMapping|@RestController")) {    //RestController ใช้เพื่อทำเครื่องหมายคลาสเป็น Spring MVC Controller และreponse เป็น JSON , RequestMapping จะได้ uri ใหญ่สุดระดับ class
+                if (annotation.matches("@RequestMapping|@RestController")) {
                     String classLevelPath = "";
                     if(annotationComponent.getAnnotationValue() != null){
                         if(!annotationComponent.getAnnotationValue().equals("RestController")){
@@ -36,17 +36,17 @@ public class APIService {
                     for(MethodInfoComponent method : methods){
                         List<AnnotationComponent> methodAnnotationComponents = method.getAnnotations().stream().map(Component::asAnnotationComponent).collect(Collectors.toList());
                         for(AnnotationComponent methodAnnotationComponent : methodAnnotationComponents) {
-                            if (methodAnnotationComponent.getAsString().contains("Mapping")) {  //Ex. @GetMapping, @PostMapping
+                            if (methodAnnotationComponent.getAsString().contains("Mapping")) {
                                 String methodLevelPath = null;
                                 if(methodAnnotationComponent.getAnnotationValue() != null){
-                                    methodLevelPath =  methodAnnotationComponent.getAnnotationValue().endsWith("Mapping") ? "" : methodAnnotationComponent.getAnnotationValue();   //ได้ uri ย่อยระดับ method
+                                    methodLevelPath =  methodAnnotationComponent.getAnnotationValue().endsWith("Mapping") ? "" : methodAnnotationComponent.getAnnotationValue();
                                 }
 
                                 if(methodLevelPath == null) {
                                     List<AnnotationValuePair> annotationValuePairList = methodAnnotationComponent.getAnnotationValuePairList();
                                     for (AnnotationValuePair valuePair : annotationValuePairList) {
                                         if (valuePair.getKey().equals("path")) {
-                                            String apiPath = (classLevelPath + valuePair.getValue()).replace("\"", "");  //get uri ของ method จาก path แทน
+                                            String apiPath = (classLevelPath + valuePair.getValue()).replace("\"", "");
                                             apis.add(new APIContext(apiPath));
                                         }
                                     }
@@ -65,6 +65,6 @@ public class APIService {
     }
 
     public boolean isVersioned(String api){
-        return api.matches("/?api/v[0-9]+.*");   // match กับ regex: /มี0-1ตัวก่อน api/v ตามด้วยตัวเลขอย่างน้อย 1 ตัว
+        return api.matches("/?api/v[0-9]+.*");
     }
 }

@@ -25,27 +25,26 @@ public class LibraryService {
 
     public SharedLibraryContext getSharedLibraries(RequestContext request) throws IOException, XmlPullParserException {
 
-        //1 ระบบมี service หลายอันโดยแต่ละservice มี pom.xml เป็นของตัวเอง
-        List<String> fileNames = resourceService.getPomXML(request.getPathToCompiledMicroservices());  // ได้ pom.xml ทั้งหมดของ1ระบบมา
+        List<String> fileNames = resourceService.getPomXML(request.getPathToCompiledMicroservices());
         SharedLibraryContext sharedLibraryContext = new SharedLibraryContext();
         MavenXpp3Reader reader = new MavenXpp3Reader();
         for(int i = 0; i < fileNames.size() - 1; i++){
             for (int j = i + 1; j < fileNames.size(); j++) {
 
-                Model modelA = reader.read(new FileReader(fileNames.get(i)));  //get pom ตัวที่ 1,2 มาเทียบกัน (ขยับคู่ตัวที่เทียบไปเรื่อยๆ)
+                Model modelA = reader.read(new FileReader(fileNames.get(i)));
                 Model modelB = reader.read(new FileReader(fileNames.get(j)));
 
-                for(Dependency dependencyA : modelA.getDependencies()){   //เทียบ dependency ทั้หมด ของ pomA กับ pomB
+                for(Dependency dependencyA : modelA.getDependencies()){
                     boolean matched = false;
                     for (Dependency dependencyB : modelB.getDependencies()) {
                         if(dependencyA.getArtifactId().equals(dependencyB.getArtifactId()) &&
                                 dependencyA.getGroupId().equals(dependencyB.getGroupId()) &&
-                               !dependencyA.getGroupId().contains("org.springframework")){  //get  dependency แต่ละตัวในแต่ละ pom มาเทียบกัน
+                               !dependencyA.getGroupId().contains("org.springframework")){
                             matched = true;
                             String msaA = modelA.getGroupId() + ":" + modelA.getArtifactId();
                             String msaB = modelB.getGroupId() + ":" + modelB.getArtifactId();
 
-                            String library = dependencyA.getGroupId() + ":" + dependencyA.getArtifactId();   //ได้ชื่อ lib ที่ dependency ใน pomA ใช้ เช่น org.projectlombok:lombok
+                            String library = dependencyA.getGroupId() + ":" + dependencyA.getArtifactId();
                             SharedLibrary sharedLibrary = sharedLibraryContext.getOrDefault(library);
                             sharedLibrary.add(msaA, msaB);
                             sharedLibraryContext.addSharedLibrary(sharedLibrary);
@@ -74,9 +73,7 @@ public class LibraryService {
                     inhouseLibraries++;
                 }
             }
-//            log.info("fileNames: " + fileNames.get(i));
-//            log.info("Dependencies size: " + modelA.getDependencies().size());
-//            log.info("inhouseLibraries: " + inhouseLibraries);
+
         }
 
         //Calulate base metrics
@@ -87,11 +84,6 @@ public class LibraryService {
             ratioOfSharedLibraries = totalNumberOfSharedLibraries/totalSystemInhouseLibraries;
         }
         sharedLibraryContext.setRatioOfSharedLibraries(ratioOfSharedLibraries);
-        log.info("****** Shared Library ******");
-        log.info("totalIn-houseLibraries: " + totalSystemInhouseLibraries);
-        log.info("totalNumberOfSharedLibraries: " + totalNumberOfSharedLibraries);
-        log.info("ratioOfSharedLibraries: " + ratioOfSharedLibraries);
-        log.info("=======================================================");
 
         return sharedLibraryContext;
     }
