@@ -4,15 +4,14 @@ import edu.baylor.ecs.msanose.model.context.CyclicDependencyContext;
 import edu.baylor.ecs.rad.context.RequestContext;
 import edu.baylor.ecs.rad.context.ResponseContext;
 import edu.baylor.ecs.rad.context.RestEntityContext;
-import edu.baylor.ecs.rad.context.RestFlowContext;
 import edu.baylor.ecs.rad.model.RestEntity;
 import edu.baylor.ecs.rad.model.RestFlow;
-import edu.baylor.ecs.rad.service.RestDiscoveryService;
-import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+@Slf4j
 @Service
 public class CyclicDependencyService {
 
@@ -28,7 +27,7 @@ public class CyclicDependencyService {
 
     // This function is a variation of DFSUtil() in
     // https://www.geeksforgeeks.org/archives/18212
-    private boolean isCyclicUtil(int i, boolean[] visited, boolean[] recStack) {
+    private boolean isCyclicUtil(int i, boolean[] visited, boolean[] recStack, CyclicDependencyContext context ) {
 
         // Mark the current node as visited and
         // part of recursion stack
@@ -42,10 +41,18 @@ public class CyclicDependencyService {
 
         recStack[i] = true;
         List<Integer> children = adjList.get(i);
+        double totalCyclicCalls = context.getTotalCyclicCall();
+        double totalServiceCalls = context.getTotalServiceCall();
+        totalServiceCalls += children.size();
+        context.setTotalServiceCall(totalServiceCalls);
 
-        for (Integer c: children)
-            if (isCyclicUtil(c, visited, recStack))
-                return true;
+        for (Integer c: children) {
+            if (isCyclicUtil(c, visited, recStack, context)) {
+                totalCyclicCalls++;
+                context.setTotalCyclicCall(totalCyclicCalls);
+                continue;
+            }
+        }
 
         recStack[i] = false;
 
@@ -56,7 +63,10 @@ public class CyclicDependencyService {
     // cycle, else false.
     // This function is a variation of DFS() in
     // https://www.geeksforgeeks.org/archives/18212
-    private boolean isCyclic() {
+    private CyclicDependencyContext isCyclic() {
+        CyclicDependencyContext context = new CyclicDependencyContext();
+        context.setTotalCyclicCall(0.0);
+        context.setTotalServiceCall(0.0);
 
         // Mark all the vertices as not visited and
         // not part of recursion stack
@@ -65,21 +75,22 @@ public class CyclicDependencyService {
 
         // Call the recursive helper function to
         // detect cycle in different DFS trees
-        for (int i = 0; i < V; i++)
-            if (isCyclicUtil(i, visited, recStack))
-                return true;
+        for (int i = 0; i < V; i++) {
+            if (isCyclicUtil(i, visited, recStack, context)) {
+                continue;
+            }
+        }
 
-        return false;
+        return context;
     }
 
-    public boolean getCyclicDependencies(RequestContext request){
-        CyclicDependencyContext context = new CyclicDependencyContext();
-        ResponseContext responseContext = restDiscoveryService.generateResponseContext(request); //หา RestEntity ทั้งหมดของทุก rest client ของทุก jar file โดยดูจาก annotaion, พยายามปั้น full url ของ rest client ขึ้นมา
+    public CyclicDependencyContext getCyclicDependencies(RequestContext request){
+        ResponseContext responseContext = restDiscoveryService.generateResponseContext(request);
 
         // Map all entities to indexes
         int ndx = 0;
         for(RestEntityContext entity : responseContext.getRestEntityContexts()){
-            vertexMap.put(entity.getResourcePath(), ndx);   //<node, index>
+            vertexMap.put(entity.getResourcePath(), ndx);
             ndx++;
         }
 
@@ -87,20 +98,27 @@ public class CyclicDependencyService {
         V = responseContext.getRestEntityContexts().size();
         adjList = new LinkedList<>();
 
-        for(int i = 0; i < V; i++){  //สร้าง adjacency list ขนาดเท่ากับ #RestEntity ทั้งหมด ทุก jar file
+        for(int i = 0; i < V; i++){
             adjList.add(new LinkedList<>());
         }
 
         for(RestFlow flow : responseContext.getRestFlowContext().getRestFlows()){
-            int keyA = vertexMap.get(flow.getResourcePath()); //flow.getResourcePath() = client.ResourcePath()
+            int keyA = vertexMap.get(flow.getResourcePath());
 
             for(RestEntity server : flow.getServers()){
                 int keyB = vertexMap.get(server.getResourcePath());
-
-                adjList.get(keyA).add(keyB);   //สร้าง graph ว่า a call ไปหา b  (index ของ b)
+                adjList.get(keyA).add(keyB);
             }
         }
 
-        return isCyclic();  //เอา adjList ไป  check ว่ามี Cyclic ไหม
+        CyclicDependencyContext context = isCyclic();
+        double totalNumberOfServiceCall = context.getTotalServiceCall();
+        double ratioOfCyclicDependency = 0.0;
+        if(totalNumberOfServiceCall != 0) {
+            ratioOfCyclicDependency = context.getTotalCyclicCall()/totalNumberOfServiceCall;
+        }
+
+        context.setRatioOfCyclicDependency(ratioOfCyclicDependency);
+        return context;
     }
 }

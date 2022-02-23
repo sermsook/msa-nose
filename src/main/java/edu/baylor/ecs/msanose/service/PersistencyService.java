@@ -7,6 +7,7 @@ import edu.baylor.ecs.msanose.model.persistency.DatabaseType;
 import edu.baylor.ecs.rad.context.RequestContext;
 import edu.baylor.ecs.rad.service.ResourceService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class PersistencyService {
@@ -23,16 +25,15 @@ public class PersistencyService {
 
     public SharedPersistencyContext getSharedPersistency(RequestContext request){
         SharedPersistencyContext context = new SharedPersistencyContext();
-
         List<String> resourcePaths = resourceService.getResourcePaths(request.getPathToCompiledMicroservices());
         Map<String, DatabaseInstance> databases = new HashMap<>();
-        for (String path : resourcePaths) {    //วน check jar แต่ละตัว
-            Map<String, Map<String, Object>> yamls = resourceService.getYamls(path, request.getOrganizationPath());  //get config ใน yaml file
+        for (String path : resourcePaths) {
+            Map<String, Map<String, Object>> yamls = resourceService.getYamls(path, request.getOrganizationPath());
             if (yamls.size() > 0) {
                 for(Map.Entry<String, Map<String, Object>> entry : yamls.entrySet()){
                     Map<String, Object> yamlProperties = new HashMap<>();
                     forEachValue(entry.getValue(), "", yamlProperties::put);
-                    if(yamlProperties.get("spring.data.mongodb.host") != null){   //หา mongodb config
+                    if(yamlProperties.get("spring.data.mongodb.host") != null){
                         DatabaseInstance databaseInstance = new DatabaseInstance(
                                 yamlProperties.get("spring.data.mongodb.database"),
                                 yamlProperties.get("spring.data.mongodb.port"),
@@ -42,14 +43,14 @@ public class PersistencyService {
                         databases.put(entry.getKey(), databaseInstance);
                     }
 
-                    if(yamlProperties.get("spring.datasource.url") != null){    //หา mysql หรือ generic db config
+                    if(yamlProperties.get("spring.datasource.url") != null){
                         DatabaseInstance databaseInstance = new DatabaseInstance(
                                 yamlProperties.get("spring.datasource.database"),
                                 yamlProperties.get("spring.datasource.port"),
                                 yamlProperties.get("spring.datasource.url"),
                                 ((String) yamlProperties.get("spring.datasource.url")).contains("mysql") ? DatabaseType.MYSQL : DatabaseType.GENERIC
                         );
-                        databases.put(entry.getKey(), databaseInstance);   //key = jarPath  value= db config  ของ jar นั้นๆ
+                        databases.put(entry.getKey(), databaseInstance);
                     }
                 }
             }
@@ -58,8 +59,8 @@ public class PersistencyService {
         List<SharedPersistency> sharedPersistencies = new ArrayList<>();
         for(Map.Entry<String, DatabaseInstance> entriesA : databases.entrySet()){
             for(Map.Entry<String, DatabaseInstance> entriesb : databases.entrySet()){
-                if(!entriesA.getKey().equals(entriesb.getKey())){ // Not the same microservice
-                    if(entriesA.getValue() == entriesb.getValue()){     //ถ้าเป็นคนละ microservice และ databaseInstance information เหมือนกัน
+                if(!entriesA.getKey().equals(entriesb.getKey())){
+                    if(entriesA.getValue().equals(entriesb.getValue())){
 
                         // First check if B-A is in the list
                         boolean exists = false;
@@ -68,8 +69,8 @@ public class PersistencyService {
                                 exists = true;
                             }
                         }
-                        if(!exists){  //ถ้าเป็นคนละ microservice และ databaseInstance information เหมือนกัน และยังไม่มีใน sharedPersistencies list จะ add เข้าไปใน list แล้ววเช็คเทียบไปเรื่อยๆ
-                            SharedPersistency sharedPersistency = new SharedPersistency(entriesA.getKey(), entriesb.getKey(), entriesA.getValue());  //ใครแชร์กับใคร โดยมี databaseInstance information ยังไงเช่น url ของ db, port, username, ...
+                        if(!exists){
+                            SharedPersistency sharedPersistency = new SharedPersistency(entriesA.getKey(), entriesb.getKey(), entriesA.getValue());
                             sharedPersistencies.add(sharedPersistency);
                         }
                     }
@@ -78,6 +79,16 @@ public class PersistencyService {
         }
 
         context.setSharedPersistencies(sharedPersistencies);
+        //Calculate base metrics
+        int n = databases.size();
+        double totalNumberOfPairOfMicroservice = ((n * (n+1))/2) - n; //Not count duplicate (A,B) (B,A) and compare with themselves (A,A)
+        double totalNumberOfMicroserviceWithSharedDB = context.getSharedPersistencies().size();  //Eg. [microA, microB, microC] --> PairOfShared = 3
+        double totalNumberOfSharedDB = ((totalNumberOfMicroserviceWithSharedDB * (totalNumberOfMicroserviceWithSharedDB + 1))/2) - totalNumberOfMicroserviceWithSharedDB;
+        double ratioOfSharedDatabases = 0;
+        if (totalNumberOfPairOfMicroservice !=0) {
+            ratioOfSharedDatabases = totalNumberOfSharedDB/totalNumberOfPairOfMicroservice;
+        }
+        context.setRatioOfSharedDatabases(ratioOfSharedDatabases);
 
         return context;
     }
@@ -119,12 +130,15 @@ public class PersistencyService {
     }
 
     private static void forEachValue(Map<String, Object> source, String base, BiConsumer<? super String, ? super Object> action) {
-        for (final Map.Entry<String, Object> entry : source.entrySet()) {
-            if (entry.getValue() instanceof Map) {
-                forEachValue((Map<String, Object>) entry.getValue(), base.concat(".").concat(entry.getKey()), action);
-            } else {
-                action.accept(base.concat(".").concat(entry.getKey()).substring(1), entry.getValue());
+        if(source != null) {
+            for (final Map.Entry<String, Object> entry : source.entrySet()) {
+                if (entry.getValue() instanceof Map) {
+                    forEachValue((Map<String, Object>) entry.getValue(), base.concat(".").concat(entry.getKey()), action);
+                } else {
+                    action.accept(base.concat(".").concat(entry.getKey()).substring(1), entry.getValue());
+                }
             }
         }
+
     }
 }

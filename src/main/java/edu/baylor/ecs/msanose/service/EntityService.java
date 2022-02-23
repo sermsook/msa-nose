@@ -45,7 +45,7 @@ public class EntityService {
 
         Set<String> entities = new HashSet<>();
 
-        String basePath = request.getPathToCompiledMicroservices();   //ex.  /User/sermsook.pul/acm-core-service-2
+        String basePath = request.getPathToCompiledMicroservices();
 
         // convert windows path to linux style
         basePath = basePath.replace("\\\\", "/");
@@ -54,51 +54,14 @@ public class EntityService {
             basePath = basePath.concat("/");
         }
 
-        String remainder = path.substring(basePath.length());      //ex.     core-service-api/target/core-service-api-4.0.27.jar
-        String folder = remainder.substring(0, remainder.indexOf('/'));    //ex.  core-service-api
+        String remainder = path.substring(basePath.length());
+        String folder = remainder.substring(0, remainder.indexOf('/'));
 
-        String newPath = basePath.concat(folder).concat("/");      //ex.   /User/sermsook.pul/acm-core-service-2/core-service-api
+        String newPath = basePath.concat(folder).concat("/");
 
         AnalysisContext analysisContext = JParserService.createContextFromPath(newPath);
 
         List<ClassComponent> classes = analysisContext.getClasses();   //get all class in this jar
-        /*
-        classes ex.
-        ------------------- index 0 ------------------------
-        ClassComponent(compilationUnit=package com.tmn.core.util;
-
-        import java.text.ParseException;
-        import java.text.SimpleDateFormat;
-        import java.util.Date;
-
-        public class DateRFC3339JsonSerializer {
-
-            public static Date serializeeRFC3339Date(String dateString) throws ParseException {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-                return sdf.parse(dateString);
-            }
-        }
-        , constructors=[], fieldComponents=[])
-
-        ------------------- index 1 ------------------------
-        ClassComponent(compilationUnit=package com.tmn.core.api.message;
-
-        public class CancelDeductRequest extends StandardAdminRequest {
-
-            private String targetTransactionId;
-
-            public String getTargetTransactionId() {
-                return targetTransactionId;
-            }
-
-            public void setTargetTransactionId(String targetTransactionId) {
-                this.targetTransactionId = targetTransactionId;
-            }
-        }
-        , constructors=[], fieldComponents=[FieldComponent(annotations=[], variables=null, fieldName=targetTransactionId, accessor=PRIVATE, staticField=false, finalField=false, stringifiedDefaultValue=null, type=String)])
-         */
-
-
 
         classes.forEach(clazz -> {
 

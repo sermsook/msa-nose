@@ -39,11 +39,11 @@ public class RestDiscoveryService {
         ResponseContext responseContext = new ResponseContext();
         responseContext.setRequest(request);
 
-        List<String> resourcePaths = resourceService.getResourcePaths(request.getPathToCompiledMicroservices());  //return list of jar/war file
-        for (String path : resourcePaths) {  //path = each jar file
-            List<CtClass> ctClasses = resourceService.getCtClasses(path, request.getOrganizationPath());  //return list of objects (all class) loaded from a particular JAR file
+        List<String> resourcePaths = resourceService.getResourcePaths(request.getPathToCompiledMicroservices());
+        for (String path : resourcePaths) {
+            List<CtClass> ctClasses = resourceService.getCtClasses(path, request.getOrganizationPath());
 
-            Set<Properties> propertiesSet = resourceService.getProperties(path, request.getOrganizationPath()); //get properties ทั้งหมดจาก application.properties (ของแต่ละ jar file)
+            Set<Properties> propertiesSet = resourceService.getProperties(path, request.getOrganizationPath());
             Properties properties;
             if (propertiesSet.size() > 0) {
                 properties = propertiesSet.iterator().next();
@@ -52,7 +52,7 @@ public class RestDiscoveryService {
             // print the properties for debug
             // Helper.dumpProperties(properties, path);
 
-            RestEntityContext restEntityContext = restEntityService.getRestEntityContext(ctClasses, path, null, properties); //ได้ list ของ restEntityContext ของrest client ทั้งหมด (พยายามปั้น full url ของ rest client ขึ้นมา)
+            RestEntityContext restEntityContext = restEntityService.getRestEntityContext(ctClasses, path, null, properties);
             responseContext.getRestEntityContexts().add(restEntityContext);
         }
 

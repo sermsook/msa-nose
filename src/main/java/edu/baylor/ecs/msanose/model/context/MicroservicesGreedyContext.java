@@ -1,6 +1,7 @@
 package edu.baylor.ecs.msanose.model.context;
 
 import edu.baylor.ecs.msanose.model.greedy.MicroserviceMetric;
+import edu.baylor.ecs.msanose.model.wrongCuts.EntityPair;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,8 @@ import java.util.List;
 @Data public class MicroservicesGreedyContext {
     List<MicroserviceMetric> microserviceMetrics;
     List<MicroserviceMetric> greedyMicroservices;
+    List<EntityPair> entityCounts;
+    double ratioOfNanoMicroservices;
 
     public MicroservicesGreedyContext(){
         this.microserviceMetrics = new ArrayList<>();

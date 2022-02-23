@@ -15,12 +15,14 @@ import java.util.List;
     private int totalHardcodedEndpoints;
     private int totalHardcodedPorts;
     private int totalHardcodedIP;
+    private double ratioOfHardCodedEndpoints;
 
     public HardCodedEndpointsContext(){
         this.hardcodedEndpoints = new ArrayList<>();
         this.totalHardcodedEndpoints = 0;
         this.totalHardcodedPorts = 0;
         this.totalHardcodedIP = 0;
+        this.ratioOfHardCodedEndpoints = 0;
     }
 
     public void addHardcodedEndpoint(HardcodedEndpoint hardcodedEndpoint){

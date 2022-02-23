@@ -2,15 +2,18 @@ package edu.baylor.ecs.msanose.service;
 
 import edu.baylor.ecs.msanose.model.context.MicroservicesGreedyContext;
 import edu.baylor.ecs.msanose.model.greedy.MicroserviceMetric;
+import edu.baylor.ecs.msanose.model.wrongCuts.EntityPair;
 import edu.baylor.ecs.rad.context.RequestContext;
 import edu.baylor.ecs.rad.service.ResourceService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class GreedyService {
@@ -20,29 +23,63 @@ public class GreedyService {
 
     public MicroservicesGreedyContext getGreedyMicroservices(RequestContext request){
         MicroservicesGreedyContext microservicesGreedyContext = new MicroservicesGreedyContext();
+        Map<String, Integer> counts = new HashMap<>();
 
         List<String> jars = resourceService.getResourcePaths(request.getPathToCompiledMicroservices());
-        File directory = new File(request.getPathToCompiledMicroservices());     //ex.   /Users/sermsook.pul/acm-core-service-2
 
-        // Get all sub-directories from a directory.
-        File[] fList = directory.listFiles();
-        List<String> subdirectories = new ArrayList<>();
-        if(fList != null)
-            for (File file : fList) {
-                if (file.isDirectory()) {
-                    subdirectories.add(file.getAbsolutePath());
-                }
-            }
-
-        // For each, get entity counts and static file counts
-        for(String dir : subdirectories){   //DaoNotes: dir = each module    ex. /Users/sermsook.pul/acm-core-service-2/core-service-web
-            List<String> entities = entityService.getEntitiesPerFolder(dir);      //all entity class name ex. [TmnProfileData, TmnProfile, TmnAddressPK, TmnAddress, LogableHeaderMataInfo, TmnProfileDataPK, TmnDocumentPK, TmnDocument]
-            List<File> staticFiles = new ArrayList<>();
-            getStaticFiles(dir, staticFiles);  //DaoNotes: get all front-end file
-            microservicesGreedyContext.addMetric(new MicroserviceMetric(dir, staticFiles.size(), entities.size()));
-            // System.out.println(dir + " - " + entities.size() + " " + staticFiles.size());
+        for(String jar : jars){
+            List<String> entities = entityService.getEntitiesPerJar(request, jar);
+            counts.put(extractName(jar), entities.size());
         }
 
+        List<EntityPair> sorted = counts.entrySet()
+                .stream()
+                .map(x -> new EntityPair(x.getKey(), x.getValue()))
+                .sorted(Comparator.comparing(EntityPair::getEntityCount))
+                .collect(Collectors.toList());
+
+        List<EntityPair> trimmed = sorted
+                .stream()
+                .filter(x -> x.getEntityCount() > 1)
+                .sorted(Comparator.comparing(EntityPair::getEntityCount))
+                .collect(Collectors.toList());
+
+        double avgEntityCount = 0;
+        for (EntityPair pair : trimmed) {
+            avgEntityCount += pair.getEntityCount();
+        }
+
+        avgEntityCount = avgEntityCount / trimmed.size();
+
+        double numerator = 0.0;
+        for (EntityPair pair : trimmed) {
+            numerator += Math.pow(pair.getEntityCount() - avgEntityCount, 2);
+        }
+
+        double std = Math.sqrt(numerator / (trimmed.size() - 1));
+
+        List<EntityPair> possibleNanoMicroservices = new ArrayList<>();
+        for(EntityPair pair : sorted){
+            MicroserviceMetric microserviceMetric = new MicroserviceMetric();
+            microserviceMetric.setPath(pair.getPath());
+            microserviceMetric.setEntityFileCount(pair.getEntityCount());
+            double d = pair.getEntityCount() - avgEntityCount;
+
+            if(d < -(2 * std)){
+                microservicesGreedyContext.addGreedyMicroservice(microserviceMetric);
+                possibleNanoMicroservices.add(pair);
+            }
+        }
+
+        //Calculate base metrics
+        double totalNumberOfMicroserviceInSystems = jars.size();
+        double totalNumberOfNanoMicroservices = possibleNanoMicroservices.size();
+        double ratioOfNanoMicroservices = 0;
+        if (totalNumberOfMicroserviceInSystems !=0) {
+            ratioOfNanoMicroservices = totalNumberOfNanoMicroservices/totalNumberOfMicroserviceInSystems;
+        }
+
+        microservicesGreedyContext.setRatioOfNanoMicroservices(ratioOfNanoMicroservices);
         return microservicesGreedyContext;
     }
 
@@ -60,6 +97,15 @@ public class GreedyService {
                     getStaticFiles(file.getAbsolutePath(), files);
                 }
             }
+    }
+
+    private String extractName(String path){
+        int begin = path.lastIndexOf("/");
+        int end = path.lastIndexOf('.');
+        if(begin == -1 || end == -1){
+            return path;
+        }
+        return path.substring(begin, end);
     }
 
 }

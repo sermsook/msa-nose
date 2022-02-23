@@ -8,6 +8,7 @@ import edu.baylor.ecs.msanose.model.standards.PresentationType;
 import edu.baylor.ecs.rad.context.RequestContext;
 import edu.baylor.ecs.rad.service.ResourceService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
@@ -20,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.*;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class TooManyStandardsService {
@@ -28,21 +30,34 @@ public class TooManyStandardsService {
     private ResourceService resourceService;
 
     public TooManyStandardsContext getStandards(RequestContext request) {
-        return new TooManyStandardsContext(
-                getPresentationStandards(request),  //check ว่ามี dependencies lib อะไรบ้างใน package.json  {react, angular, static}
-                getBusinessStandards(request), //วนเช็คแต่ละ dependency ในแต่ละ pom.xml ว่ามีใช้ standard lib อะไรบ้าง
-                getDataStandards(request) //get all database type ที่อยู่ในทุก .yml file
-        );
+        double ratioOfExcessiveStandards = 0;
+        Set<PresentationType> presentationStandards = getPresentationStandards(request);
+        Set<BusinessType> businessStandards = getBusinessStandards(request);
+        Set<DatabaseType> databaseStandards = getDataStandards(request);
+        double totalSystemStandards = presentationStandards.size() + businessStandards.size() + databaseStandards.size();
+
+        if (totalSystemStandards <= request.getStandardThreshold()) {
+            ratioOfExcessiveStandards = 0;
+        } else {
+            ratioOfExcessiveStandards = (totalSystemStandards - request.getStandardThreshold())/totalSystemStandards;
+            if (ratioOfExcessiveStandards > 1) {
+                ratioOfExcessiveStandards = 1;
+            }
+        }
+
+        TooManyStandardsContext tooManyStandardsContext = new TooManyStandardsContext(presentationStandards, businessStandards, databaseStandards, ratioOfExcessiveStandards);
+
+        return tooManyStandardsContext;
     }
 
     public Set<PresentationType> getPresentationStandards(RequestContext request){
         Set<PresentationType> types = new HashSet<>();
 
-        List<String> packageJsonFilePaths = resourceService.getPackageJsons(request.getPathToCompiledMicroservices());  //get all package.json file path
+        List<String> packageJsonFilePaths = resourceService.getPackageJsons(request.getPathToCompiledMicroservices());
 
         for(String packageJsonFilePath : packageJsonFilePaths){
             try {
-                String content = new Scanner(new File(packageJsonFilePath)).useDelimiter("\\Z").next();  //scan จน ถึง The end of the input but for the final terminator
+                String content = new Scanner(new File(packageJsonFilePath)).useDelimiter("\\Z").next();
                 JSONObject packageJson = new JSONObject(content);
                 JSONObject dependencies = packageJson.getJSONObject("dependencies");
 
@@ -75,14 +90,14 @@ public class TooManyStandardsService {
         Set<BusinessType> types = new HashSet<>();
 
 
-        List<String> fileNames = resourceService.getPomXML(request.getPathToCompiledMicroservices());  //get all pom.xml
+        List<String> fileNames = resourceService.getPomXML(request.getPathToCompiledMicroservices());
         MavenXpp3Reader reader = new MavenXpp3Reader();
         for(String filePath : fileNames){
 
             try {
                 Model model = reader.read(new FileReader(filePath));
 
-                for (Dependency dependency : model.getDependencies()) {   //วนเช็คแต่ละ dependency ในแต่ละ pom.xml
+                for (Dependency dependency : model.getDependencies()) {
 
                     if (dependency.getGroupId().equals("org.springframework.boot")) {
                         types.add(BusinessType.SPRING);
@@ -115,7 +130,7 @@ public class TooManyStandardsService {
     }
 
     public Set<DatabaseType> getDataStandards(RequestContext request){
-        Map<String, DatabaseInstance> databases = persistencyService.getModulePersistencies(request);  //get all db config ใน yml file
+        Map<String, DatabaseInstance> databases = persistencyService.getModulePersistencies(request);
 
         Set<DatabaseType> types = new HashSet<>();
         for(Map.Entry<String, DatabaseInstance> entry : databases.entrySet()){

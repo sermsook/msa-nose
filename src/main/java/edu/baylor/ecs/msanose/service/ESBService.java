@@ -6,20 +6,23 @@ import edu.baylor.ecs.rad.context.RequestContext;
 import edu.baylor.ecs.rad.context.ResponseContext;
 import edu.baylor.ecs.rad.model.RestEntity;
 import edu.baylor.ecs.rad.model.RestFlow;
-import edu.baylor.ecs.rad.service.RestDiscoveryService;
+import edu.baylor.ecs.rad.service.ResourceService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Data
 @AllArgsConstructor
 public class ESBService {
 
     private RestService restDiscoveryService;
+    private final ResourceService resourceService;
 
     public ESBContext getESBContext(RequestContext request){
         ESBContext esbContext = new ESBContext();
@@ -32,11 +35,11 @@ public class ESBService {
         Map<String, Integer> outgoing = new HashMap<>();
         for(RestFlow flow : responseContext.getRestFlowContext().getRestFlows()){
             Integer out = outgoing.getOrDefault(flow.getResourcePath(), 0);
-            outgoing.put(flow.getResourcePath(), ++out);  //<path กับ จำนวนเส้นออก>
+            outgoing.put(flow.getResourcePath(), ++out);
 
             for(RestEntity entity : flow.getServers()){
                 Integer in = incoming.getOrDefault(entity.getResourcePath(), 0);
-                incoming.put(entity.getResourcePath(), ++in); //<path กับ จำนวนเส้นเข้า>
+                incoming.put(entity.getResourcePath(), ++in);
             }
         }
 
@@ -60,13 +63,14 @@ public class ESBService {
             avgStepOut += (outB - outA);
         }
         avgStepOut = avgStepOut / (sortedOutgoing.size() - 1);
+        log.info("sd is " + avgStepOut + "  ---> 2sd is " + (2*avgStepOut));
 
         List<ServerPair> possibleESBOut = new ArrayList<>();
         for(int i = 0; i < sortedOutgoing.size() - 1; i++){
             int outA = sortedOutgoing.get(i).getEdges();
             int outB = sortedOutgoing.get(i + 1).getEdges();
-            //if มากกว่า 2sd  ก็อาจจะเป็น module ที่ทำตัวเป็น ESB
-            if(( outB - outA) > (2 * avgStepOut)){    //if ( outB - outA) > 2* ((sum(xi-X))/n-1) ก็อาจจะเป็น module ที่ทำตัวเป็น ESB
+
+            if(( outB - outA) > (2 * avgStepOut)){
                 possibleESBOut.add(sortedOutgoing.get(i + 1));
             }
         }
@@ -89,11 +93,23 @@ public class ESBService {
 
         for(ServerPair pairOut : possibleESBOut){
             for(ServerPair pairIn : possibleESBIn){
-                if(pairIn.getPath().equals(pairOut.getPath())){  ///???????
-                    esbContext.getCandidateESBs().add(new MicroserviceContext(pairIn.getPath()));   //add ชื่อ module ที่อาจจะเป็น ESB ไปใน list
+                if(pairIn.getPath().equals(pairOut.getPath())){
+                    esbContext.getCandidateESBs().add(new MicroserviceContext(pairIn.getPath()));
                 }
             }
         }
+
+        List<String> jars = resourceService.getResourcePaths(request.getPathToCompiledMicroservices());
+
+        //Calculate base metrics
+        double totalNumberOfMicroserviceInSystems = jars.size();
+        double totalNumberOfCandidateESBs = esbContext.getCandidateESBs().size();
+        double ratioOfESBMicroservices = 0;
+        if (totalNumberOfMicroserviceInSystems !=0) {
+            ratioOfESBMicroservices = totalNumberOfCandidateESBs/totalNumberOfMicroserviceInSystems;
+        }
+
+        esbContext.setRatioOfESBMicroservices(ratioOfESBMicroservices);
 
         return esbContext;
     }

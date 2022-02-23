@@ -36,16 +36,16 @@ public class JaxRsAnalyzer {
         if (annotationsAttribute != null) {
             Annotation[] annotations = annotationsAttribute.getAnnotations();
             for (Annotation annotation : annotations) {
-                if (annotation.getTypeName().equals(mpRegisterControllerAnnotation)) {  //ถ้า annotation type เป็น RegisterRestClient
+                if (annotation.getTypeName().equals(mpRegisterControllerAnnotation)) {
                     isClient = true;
-                } else if (annotation.getTypeName().equals(getJaxRsAnnotation("Path"))) {   //ถ้า annotation type เป็น javax.ws.rs.Path
+                } else if (annotation.getTypeName().equals(getJaxRsAnnotation("Path"))) {
                     path = Helper.getAnnotationValue(annotation, "value");
                 }
             }
         }
 
         for (CtMethod ctMethod : ctClass.getMethods()) {
-            RestEntity restEntity = analyseMethod(ctMethod); //ถ้ามี annotation เช่น @GET หรือ javax.ws.rs.XXX ก็จะ return ข้อมูลของ restEntity
+            RestEntity restEntity = analyseMethod(ctMethod);
             if (restEntity != null) {
                 // append class level path
                 if (path != null) {
@@ -81,15 +81,15 @@ public class JaxRsAnalyzer {
                 String annotationType = annotation.getTypeName();
                 boolean isRestAnnotation = true;
 
-                if (annotationType.equals(getJaxRsAnnotation("Path"))) {   //if equal javax.ws.rs.Path
+                if (annotationType.equals(getJaxRsAnnotation("Path"))) {
                     restEntity.setPath(Helper.getAnnotationValue(annotation, "value"));
-                } else if (annotationType.equals(getJaxRsAnnotation("Produces"))) {  //if equal javax.ws.rs.Produces
+                } else if (annotationType.equals(getJaxRsAnnotation("Produces"))) {
                     restEntity.setProduceType(Helper.getAnnotationValue(annotation, "value"));
-                } else if (annotationType.equals(getJaxRsAnnotation("Consumes"))) {   //if equal javax.ws.rs.Consumes
+                } else if (annotationType.equals(getJaxRsAnnotation("Consumes"))) {
                     restEntity.setConsumeType(Helper.getAnnotationValue(annotation, "value"));
-                } else if (annotationToHttpMethod(annotationType) != null) { //if เป็น annotation ของ HTTP method เช่น @GET, @POST
+                } else if (annotationToHttpMethod(annotationType) != null) {
                     restEntity.setHttpMethod(annotationToHttpMethod(annotationType));
-                } else { // not JAX-RS annotation
+                } else {
                     isRestAnnotation = false;
                 }
 

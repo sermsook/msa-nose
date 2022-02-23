@@ -10,6 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @Data public class ESBContext {
     List<MicroserviceContext> candidateESBs;
+    double ratioOfESBMicroservices;
 
     public ESBContext(){
         this.candidateESBs = new ArrayList<>();

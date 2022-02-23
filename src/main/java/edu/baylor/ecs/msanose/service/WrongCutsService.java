@@ -6,11 +6,13 @@ import edu.baylor.ecs.rad.context.RequestContext;
 import edu.baylor.ecs.rad.service.ResourceService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class WrongCutsService {
@@ -21,16 +23,12 @@ public class WrongCutsService {
     public WrongCutsContext getWrongCuts(RequestContext request){
         WrongCutsContext wrongCutsContext = new WrongCutsContext();
         Map<String, Integer> counts = new HashMap<>();
-        List<String> jars = resourceService.getResourcePaths(request.getPathToCompiledMicroservices()); //ได้list path ของ JAR or WAR file in the project directory
+
+        List<String> jars = resourceService.getResourcePaths(request.getPathToCompiledMicroservices());
 
         for(String jar : jars){
-            List<String> entities = entityService.getEntitiesPerJar(request, jar); //หา entity class name ทั้งหมดใน jar โดยดูจาก annotation @Entity หรือ @Document
-
-            /*
-            entities = [TmnProfileData, TmnProfile, TmnAddressPK, TmnAddress, LogableHeaderMataInfo, TmnProfileDataPK, TmnDocumentPK, TmnDocument]
-             */
-
-            counts.put(extractName(jar), entities.size());  //extract ชื่อ jar file ; counts = list(jarName, #entity)
+            List<String> entities = entityService.getEntitiesPerJar(request, jar);
+            counts.put(extractName(jar), entities.size());
         }
 
         List<EntityPair> sorted = counts.entrySet()
@@ -41,7 +39,7 @@ public class WrongCutsService {
 
         List<EntityPair> trimmed = sorted
                 .stream()
-                .filter(x -> x.getEntityCount() > 1)  //filter เอาอันที่ entity > 1
+                .filter(x -> x.getEntityCount() > 1)
                 .sorted(Comparator.comparing(EntityPair::getEntityCount))
                 .collect(Collectors.toList());
 
@@ -49,30 +47,34 @@ public class WrongCutsService {
         for (EntityPair pair : trimmed) {
             avgEntityCount += pair.getEntityCount();
         }
-        avgEntityCount = avgEntityCount / trimmed.size();  //#entity ทั้งหมด/#jar ที่มี entity > 1
+        avgEntityCount = avgEntityCount / trimmed.size();
 
         double numerator = 0.0;
         for (EntityPair pair : trimmed) {
-            numerator += Math.pow(pair.getEntityCount() - avgEntityCount, 2);  //numerator = sum(#entityต่อ1jar - avgEntityCount)^2
+            numerator += Math.pow(pair.getEntityCount() - avgEntityCount, 2);
         }
 
-        double std = Math.sqrt(numerator / (trimmed.size() - 1));   //std = sqrt(numerator/(#jar ที่มี entity > 1 - 1))
+        double std = Math.sqrt(numerator / (trimmed.size() - 1));
 
         List<EntityPair> possibleWrongCuts = new ArrayList<>();
         for(EntityPair pair : sorted){
-
-//            if(pair.getEntityCount() == 0){
-//                possibleWrongCuts.add(pair);
-//            }
-
-            double d = Math.max(avgEntityCount, pair.getEntityCount()) - Math.min(avgEntityCount, pair.getEntityCount());  //d = #entity มากสุด - #entity น้อยสุด
-            if(d > (2 * std)){   //ถ้า d > 2sd ก็มีความเป็นไปได้ที่จะเป็น WrongCuts
+            double d = pair.getEntityCount() - avgEntityCount;
+            if(d > (2 * std) || d < -(2 * std)){
                 possibleWrongCuts.add(pair);
             }
         }
 
         wrongCutsContext.setEntityCounts(sorted);
         wrongCutsContext.setPossibleWrongCuts(possibleWrongCuts);
+
+        //Calculate base metrics
+        double totalNumberOfMicroserviceInSystems = jars.size();
+        double totalNumberOfPossibleWrongCuts = wrongCutsContext.getPossibleWrongCuts().size();
+        double ratioOfWrongCuts = 0;
+        if (totalNumberOfMicroserviceInSystems !=0) {
+            ratioOfWrongCuts = totalNumberOfPossibleWrongCuts/totalNumberOfMicroserviceInSystems;
+        }
+        wrongCutsContext.setRatioOfWrongCuts(ratioOfWrongCuts);
 
         return wrongCutsContext;
     }

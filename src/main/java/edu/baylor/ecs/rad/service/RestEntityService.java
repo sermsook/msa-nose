@@ -42,8 +42,8 @@ public class RestEntityService {
 
         for (CtClass ctClass : allClasses) {
             restEntityContext.getRestEntities().addAll(jaxRsAnalyzer.getRestEntity(ctClass));
-            restEntityContext.getRestEntities().addAll(springAnalyzer.getRestEntity(ctClass)); //ใช้ RequestMapping
-            restEntityContext.getRestEntities().addAll(springClientAnalyzer.getRestEntity(ctClass, properties)); //ใช้ RestTemplate
+            restEntityContext.getRestEntities().addAll(springAnalyzer.getRestEntity(ctClass));
+            restEntityContext.getRestEntities().addAll(springClientAnalyzer.getRestEntity(ctClass, properties));
             // restEntityContext.getRestEntities().addAll(springClientWrapperAnalyzer.getRestEntity(ctClass));
         }
 

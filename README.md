@@ -75,14 +75,13 @@ Each of the endpoints is called using a POST operation with the body as follows:
 {
     "pathToCompiledMicroservices": "/<path-to-microservices>/",
     "organizationPath": "",
-    "outputPath": ""
+    "outputPath": "",
+    "standardThreshold": 1,
+    "endpointThreshold": 50,
+    "hasApiGateway": false
 }
 ```
 
 ## Authors
 
-* [**Andrew Walker**](https://github.com/walker76)
-
-## Acknowledgments
-
-This material is based upon work supported by the National Science Foundation under Grant No. 1854049 and a grant from [Red Hat Research](https://research.redhat.com).
+* [**Sermsook Pulnil**](https://github.com/sermsook)
